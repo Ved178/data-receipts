@@ -25,7 +25,7 @@ from ml import reasons as reasons_mod
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODELS = os.path.join(HERE, "models")
-FLAG_THRESHOLD = 0.8  # chosen from out-of-fold scores on ten held-out companies
+FLAG_THRESHOLD = 0.95  # fresh box sessions: ~80% of flags correct at >=0.95 vs ~67% at 0.8
 AUTO_BLOCK_THRESHOLD = 0.97
 LOCK_RETRIES = 5
 
@@ -60,10 +60,23 @@ def is_call_infra(name):
     return bool(_CALL_INFRA.match((name or "").split(".")[0]))
 
 
+_AUTH_TOKENS = {"login", "logon", "signin", "signon", "auth", "oauth", "sso", "accounts", "account",
+                "idp", "identity"}
+
+
+def is_auth_endpoint(name):
+    """Login / sign-in hosts (login.aa.com, eu-auth2.samsungosp.com). Blocking one breaks a login
+    mid-demo, and the model tends to score them high, so they are never scored. Matches whole
+    tokens of the first label (digits stripped), so 'authority-ads' or 'id5-sync' don't match."""
+    first = (name or "").lower().split(".")[0]
+    return any(re.sub(r"\d+", "", t) in _AUTH_TOKENS for t in re.split(r"[^a-z0-9]+", first) if t)
+
+
 def score_domains(conn, L, model):
     """{domain: (score, features)} for unlisted, non-allowlisted domains."""
     F = feat.build(conn, L)
-    cand = [d for d in F if not L.is_known(d) and not L.is_allowlisted(d) and not is_call_infra(d)]
+    cand = [d for d in F if not L.is_known(d) and not L.is_allowlisted(d) and not is_call_infra(d)
+            and not is_auth_endpoint(d)]
     if not cand:
         return {}
     probs = model.predict_proba(feat.matrix(F, cand))[:, 1]

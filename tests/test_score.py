@@ -26,6 +26,14 @@ def _db():
 
 
 class TestScore(unittest.TestCase):
+    def test_auth_endpoints_never_scored(self):
+        for d in ("login.aa.com", "eu-auth2.samsungosp.com", "accounts.google.com", "sso.example.com",
+                  "oauth2.foo.net", "signin.aws.amazon.com"):
+            self.assertTrue(score.is_auth_endpoint(d), d)
+        for d in ("id5-sync.com", "authority-ads.com", "api.locketcamera.com", "collect.ureca-lab.com",
+                  "a.bids.ws", "metrics.rapidedge.io"):
+            self.assertFalse(score.is_auth_endpoint(d), d)
+
     def test_call_infrastructure_never_scored(self):
         for d in ("stun.ekiga.net", "stun1.l.google.com", "turn.example.com"):
             self.assertTrue(score.is_call_infra(d), d)
@@ -39,7 +47,7 @@ class TestScore(unittest.TestCase):
         s = score.score_domains(c, L, Stub(0.8))
         self.assertIn("metrics.newapp.com", s)
         self.assertNotIn("ads.doubleclick.net", s)  # on the blocklist: not ML's job
-        n = score.write_flags(c, L, s, "t1")
+        n = score.write_flags(c, L, s, "t1", threshold=0.6)
         self.assertGreaterEqual(n, 1)
         row = c.execute("SELECT status, reasons FROM ml_flags WHERE domain='metrics.newapp.com'").fetchone()
         self.assertEqual(row[0], "suspected")
@@ -69,15 +77,15 @@ class TestScore(unittest.TestCase):
         c = _db()
         L = lists.load()
         s = score.score_domains(c, L, Stub(0.8))
-        score.write_flags(c, L, s, "t1")
+        score.write_flags(c, L, s, "t1", threshold=0.6)
         c.execute("UPDATE ml_flags SET status='auto_blocked' WHERE domain='metrics.newapp.com'")
         c.commit()
-        score.write_flags(c, L, s, "t1")   # auto-block is off: must keep the person's choice
+        score.write_flags(c, L, s, "t1", threshold=0.6)   # auto-block is off: must keep the person's choice
         self.assertEqual(c.execute("SELECT status FROM ml_flags WHERE domain='metrics.newapp.com'")
                          .fetchone()[0], "auto_blocked")
         c.execute("UPDATE ml_flags SET status='dismissed' WHERE domain='metrics.newapp.com'")
         c.commit()
-        score.write_flags(c, L, s, "t1")
+        score.write_flags(c, L, s, "t1", threshold=0.6)
         self.assertEqual(c.execute("SELECT status FROM ml_flags WHERE domain='metrics.newapp.com'")
                          .fetchone()[0], "dismissed")
 
