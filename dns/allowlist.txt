@@ -17,3 +17,7 @@ fastly.net
 www.google.com
 graph.facebook.com
 afafb.com
+# Facebook app, Messenger, "Log in with Facebook": lists.py marks all of facebook.com as a tracker
+facebook.com
+fbsbx.com                      # Messenger photos/files
+fb.com
