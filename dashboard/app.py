@@ -42,7 +42,7 @@ WHAT_THEY_GET = {
     "Social": "Can link this app's activity to a social profile.",
     "FingerprintingInvasive": "Collect device details to recognize your phone without an ad ID.",
     "FingerprintingGeneral": "Collect device details that help recognize your phone.",
-    "Suspected": "Not on any list. Flagged by our on-device model from how it behaves.",
+    "Suspected": "Not on our blocklists. Flagged by our on-device model from how it behaves.",
 }
 
 
