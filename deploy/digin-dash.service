@@ -1,5 +1,5 @@
 [Unit]
-Description=Data Receipt dashboard (http://10.42.0.1)
+Description=Data Receipt dashboard (http://10.42.0.1, DigIn only; not reachable from the venue network)
 After=digin-dns.service
 StartLimitIntervalSec=0
 
@@ -7,7 +7,7 @@ StartLimitIntervalSec=0
 Type=simple
 Environment=DIGIN_DB=/home/arduino/digin/digin.db PYTHONDONTWRITEBYTECODE=1
 UMask=0000
-ExecStart=/usr/bin/python3 /home/arduino/madhacks26/dashboard/app.py --port 80
+ExecStart=/usr/bin/python3 /home/arduino/madhacks26/dashboard/app.py --host 10.42.0.1 --port 80
 Restart=always
 RestartSec=1
 

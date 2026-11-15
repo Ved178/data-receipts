@@ -42,7 +42,7 @@ WHAT_THEY_GET = {
     "Social": "Can link this app's activity to a social profile.",
     "FingerprintingInvasive": "Collect device details to recognize your phone without an ad ID.",
     "FingerprintingGeneral": "Collect device details that help recognize your phone.",
-    "Suspected": "Not on any list. Flagged by our on-device model from how it behaves.",
+    "Suspected": "Not on our blocklists. Flagged by our detector from how it behaves.",
 }
 
 
@@ -86,20 +86,45 @@ def flags_map(conn):
 
 
 def classify(qname, flags, chain=None):
-    """-> (company, category) | (domain, 'Suspected') | None. Also uncloaks CNAME chains."""
+    """-> (company, category) | (domain, 'Suspected') | None. Also uncloaks CNAME chains.
+    The category follows what the domain does: an ad server is Advertising even when its owner
+    is filed under Content (e.g. Amazon)."""
     if company.is_system(qname):
         return None
+    chain = chain_list(chain)
+    names = [qname] + chain
     hit = company.company_for(qname)
     if hit:
-        return hit
-    for target in chain_list(chain):
+        return (company.display(hit[0]), company.by_function(names, hit[1]))
+    # CNAME uncloaking: only a trail that ends at a TRACKER changes who we credit. A trail to a
+    # cloud host (thinkingdata.cn -> Alibaba load balancer) must not relabel the domain as the host.
+    for target in chain:
         hit = company.company_for(target)
-        if hit:
-            return (hit[0], hit[1])
-    f = flags.get(qname)
+        if hit and hit[1] in TRACKING:
+            return (company.display(hit[0]), hit[1])
+    # The detector flags registrable names (bidease.com); match any parent of the lookup.
+    p = qname.lower().strip(".").split(".")
+    f = next((flags[".".join(p[i:])] for i in range(len(p) - 1) if ".".join(p[i:]) in flags), None)
     if f and f["status"] in ("suspected", "auto_blocked"):
-        return (qname, "Suspected")
+        return (f["domain"], "Suspected")
     return None
+
+
+TRACKING = ("Advertising", "Analytics", "Social", "FingerprintingInvasive", "FingerprintingGeneral",
+            "Suspected", "Cryptomining", "Shield blocklist")
+
+
+def classify_row(r, flags):
+    """classify(), plus: a lookup Shield blocked is a tracker even when the receipt lists don't
+    know it (it came from dns/blocklist.txt, e.g. moloco.rtb.afafb.com, tiktokpangle.us)."""
+    hit = classify(r["qname"], flags, r["cname_chain"])
+    if r["blocked"] and not is_tracking(hit):
+        hit = (company.base(r["qname"]), "Shield blocklist")
+    return hit
+
+
+def is_tracking(hit):
+    return bool(hit) and hit[1] in TRACKING
 
 
 def chain_list(chain):
@@ -130,38 +155,50 @@ def state(session_param):
                             " ORDER BY id").fetchall()
 
     flags = flags_map(conn)
-    companies = {}
+    app = sel["app_name"] if sel else None
+    entries = {}          # (company, category) -> row: a company can sit in two categories (Amazon ads + shop)
     unknown = defaultdict(int)
+    background = defaultdict(lambda: {"hits": 0, "domains": set()})
     blocked_lookups = 0
     for r in rows:
         q = r["qname"]
         if r["blocked"]:
             blocked_lookups += 1
+        bg = company.background([q] + chain_list(r["cname_chain"]), app)
+        if bg:
+            background[bg]["hits"] += 1
+            background[bg]["domains"].add(q)
+            continue
         hit = classify(q, flags, r["cname_chain"])
         if not hit:
             if not company.is_system(q):
                 unknown[q] += 1
             continue
         co, cat = hit
-        c = companies.setdefault(co, {"company": co, "category": cat, "hits": 0, "blocked": 0, "domains": set()})
+        c = entries.setdefault((co, cat), {"company": co, "category": cat, "hits": 0, "blocked": 0, "domains": set()})
         c["hits"] += 1
         c["blocked"] += 1 if r["blocked"] else 0
         c["domains"].add(q)
 
     groups = defaultdict(list)
-    for c in companies.values():
+    for c in entries.values():
         c["domains"] = sorted(c["domains"])
         groups[c["category"]].append(c)
     receipt = []
     for cat, items in sorted(groups.items(), key=lambda kv: -sum(i["hits"] for i in kv[1])):
         items.sort(key=lambda i: -i["hits"])
         receipt.append({"category": cat, "note": WHAT_THEY_GET.get(cat, ""), "companies": items})
+    companies = {c["company"] for c in entries.values()}
+    companies_blocked = {c["company"] for c in entries.values() if c["blocked"]}
 
     duration = None
     if sel:
         duration = (sel["end_ts"] or time.time()) - sel["start_ts"]
-    recent = [{"ts": r["ts"], "qname": r["qname"], "blocked": r["block_reason"],
-               "tracker": bool(classify(r["qname"], flags, r["cname_chain"]))} for r in list(rows)[-15:]][::-1]
+    recent = []
+    for r in list(rows)[-15:][::-1]:
+        bg = company.background([r["qname"]] + chain_list(r["cname_chain"]), app)
+        recent.append({"ts": r["ts"], "qname": r["qname"], "blocked": r["block_reason"],
+                       "tracker": (not bg) and is_tracking(classify(r["qname"], flags, r["cname_chain"]))})
     return {
         "shield": setting(conn, "shield", "off"),
         "selected_app": setting(conn, "selected_app", ""),
@@ -171,8 +208,11 @@ def state(session_param):
         "duration_s": duration,
         "totals": {"lookups": len(rows), "domains": len({r["qname"] for r in rows}),
                    "companies": len(companies), "blocked_lookups": blocked_lookups,
-                   "companies_blocked": sum(1 for c in companies.values() if c["blocked"])},
+                   "companies_blocked": len(companies_blocked),
+                   "background_lookups": sum(b["hits"] for b in background.values())},
         "receipt": receipt,
+        "background": [{"label": k, "hits": v["hits"], "domains": sorted(v["domains"])}
+                       for k, v in sorted(background.items(), key=lambda kv: -kv[1]["hits"])],
         "unknown": sorted(unknown.items(), key=lambda kv: -kv[1])[:12],
         "recent": recent,
         "server_ts": time.time(),
@@ -185,8 +225,11 @@ def tracker_web():
     apps = {r["session_id"]: r["app_name"] for r in conn.execute("SELECT session_id, app_name FROM sessions")}
     edges = defaultdict(int)
     for r in conn.execute("SELECT session_id, qname, cname_chain FROM raw_lookups WHERE session_id IS NOT NULL"):
+        if r["session_id"] not in apps or company.background(
+                [r["qname"]] + chain_list(r["cname_chain"]), apps[r["session_id"]]):
+            continue
         hit = classify(r["qname"], flags, r["cname_chain"])
-        if hit and r["session_id"] in apps:
+        if hit:
             edges[(apps[r["session_id"]], hit[0], hit[1])] += 1
     by_company = defaultdict(set)
     for (app, co, _), _n in edges.items():
@@ -195,6 +238,100 @@ def tracker_web():
         "edges": [{"app": a, "company": c, "category": cat, "hits": n} for (a, c, cat), n in edges.items()],
         "everywhere": sorted(([c, len(a)] for c, a in by_company.items()), key=lambda x: -x[1])[:10],
     }
+
+
+def _sessions(conn):
+    """All sessions, newest first, each with app, length and whether Shield blocked anything."""
+    out = []
+    for r in conn.execute("SELECT s.session_id, s.app_name, s.start_ts, s.end_ts,"
+                          " (SELECT COUNT(*) FROM raw_lookups l WHERE l.session_id=s.session_id),"
+                          " (SELECT COUNT(*) FROM raw_lookups l WHERE l.session_id=s.session_id AND l.blocked=1)"
+                          " FROM sessions s ORDER BY s.start_ts DESC"):
+        out.append({"session_id": r[0], "app_name": r[1], "start_ts": r[2], "end_ts": r[3],
+                    "lookups": r[4], "blocked": r[5], "shield": "on" if r[5] else "off"})
+    return out
+
+
+def timeline(session_id):
+    """Whack-a-mole: one row per tracking company, every lookup as blocked / caught / allowed,
+    plus the moments the game switched to a network the detector caught."""
+    conn = db()
+    s = next((x for x in _sessions(conn) if str(x["session_id"]) == str(session_id)), None)
+    if not s:
+        return {"error": "no such session"}
+    flags = flags_map(conn)
+    rows = conn.execute("SELECT ts, qname, cname_chain, blocked FROM raw_lookups WHERE session_id=? ORDER BY ts",
+                        (s["session_id"],)).fetchall()
+    start = s["start_ts"]
+    end = max([s["end_ts"] or time.time()] + [r["ts"] for r in rows])
+    cos, first_block = {}, None
+    for r in rows:
+        if company.background([r["qname"]] + chain_list(r["cname_chain"]), s["app_name"]):
+            continue
+        hit = classify_row(r, flags)
+        if not is_tracking(hit):
+            continue
+        status = "caught" if hit[1] == "Suspected" else ("blocked" if r["blocked"] else "allowed")
+        t = round(r["ts"] - start, 1)
+        if r["blocked"] and first_block is None and hit[1] == "Advertising":
+            first_block = {"t": t, "company": hit[0]}
+        c = cos.setdefault(hit[0], {"company": hit[0], "category": hit[1], "first_t": t, "events": []})
+        c["events"].append([t, status, r["qname"]])
+    companies = sorted(cos.values(), key=lambda c: c["first_t"])
+    switches = [{"t": c["first_t"], "company": c["company"]} for c in companies if c["category"] == "Suspected"]
+    return {"session": s, "duration_s": round(end - start, 1), "companies": companies,
+            "first_block": first_block, "switches": switches}
+
+
+def _session_summary(conn, s, flags):
+    rows = conn.execute("SELECT qname, cname_chain, blocked FROM raw_lookups WHERE session_id=?",
+                        (s["session_id"],)).fetchall()
+    reached, through, blocked_cos, caught = set(), set(), set(), set()
+    own_ok = own_blocked = 0
+    for r in rows:
+        if company.background([r["qname"]] + chain_list(r["cname_chain"]), s["app_name"]):
+            continue
+        hit = classify_row(r, flags)
+        if is_tracking(hit):
+            reached.add(hit[0])
+            if hit[1] == "Suspected":
+                caught.add(hit[0])
+            if r["blocked"]:
+                blocked_cos.add(hit[0])
+            else:
+                through.add(hit[0])
+        elif not company.is_system(r["qname"]):
+            # the game's own servers, its cloud hosts and CDNs: what it needs to work
+            if r["blocked"]:
+                own_blocked += 1
+            else:
+                own_ok += 1
+    return {"session_id": s["session_id"], "shield": s["shield"], "lookups": len(rows),
+            "duration_s": round((s["end_ts"] or time.time()) - s["start_ts"]),
+            "companies_reached": len(reached), "companies_blocked": len(blocked_cos - through),
+            "companies_through": sorted(through - caught), "caught": sorted(caught),
+            "game_lookups_ok": own_ok, "game_lookups_blocked": own_blocked,
+            "game_still_worked": own_ok > 0 and own_blocked == 0}
+
+
+def compare(app=None, off_id=None, on_id=None):
+    """Shield before/after for one app: latest Shield-OFF vs latest Shield-ON session (or given ids)."""
+    conn = db()
+    ss = [s for s in _sessions(conn) if s["lookups"]]
+    if app is None and ss:
+        app = next((s["app_name"] for s in ss if s["shield"] == "on"), ss[0]["app_name"])
+    mine = [s for s in ss if (s["app_name"] or "").strip().lower() == (app or "").strip().lower()]
+    def pick(sid, shield):
+        if sid:
+            return next((s for s in ss if str(s["session_id"]) == str(sid)), None)
+        return next((s for s in mine if s["shield"] == shield), None)  # newest first
+    off, on = pick(off_id, "off"), pick(on_id, "on")
+    flags = flags_map(conn)
+    apps = sorted({(s["app_name"] or "").strip() for s in ss if s["shield"] == "on"} &
+                  {(s["app_name"] or "").strip() for s in ss if s["shield"] == "off"}, key=str.lower)
+    return {"app": app, "apps_with_both": apps,
+            "off": _session_summary(conn, off, flags) if off else None,
+            "on": _session_summary(conn, on, flags) if on else None}
 
 
 def health():
@@ -240,8 +377,10 @@ class Handler(BaseHTTPRequestHandler):
         try:
             holdout = setting(db(), "demo_holdout", "") or ""
             company.set_holdout(holdout.split(","))
-            if u.path in ("/", "/index.html"):
-                with open(os.path.join(HERE, "static", "index.html"), "rb") as f:
+            q = parse_qs(u.query)
+            if u.path in ("/", "/index.html", "/story", "/story.html"):
+                name = "story.html" if u.path.startswith("/story") else "index.html"
+                with open(os.path.join(HERE, "static", name), "rb") as f:
                     page = f.read()
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -256,6 +395,12 @@ class Handler(BaseHTTPRequestHandler):
                 flags = list(flags_map(db()).values())
                 flags.sort(key=lambda f: -f["score"])
                 self.send_json(flags)
+            elif u.path == "/api/sessions":
+                self.send_json(_sessions(db()))
+            elif u.path == "/api/timeline":
+                self.send_json(timeline(q.get("session", [""])[0]))
+            elif u.path == "/api/compare":
+                self.send_json(compare(q.get("app", [None])[0], q.get("off", [None])[0], q.get("on", [None])[0]))
             elif u.path == "/health":
                 self.send_json(health())
             else:

@@ -60,7 +60,8 @@
   .flag .acts{display:flex;gap:8px;margin-top:8px} .flag button{padding:6px 10px;font-size:12px}
   .feed{font-family:var(--mono);font-size:12.5px;max-height:330px;overflow:hidden}
   .feed div{padding:4px 0;border-bottom:1px solid #1f2229;display:flex;gap:10px}
-  .feed .t{color:var(--mute)} .feed .trk{color:var(--red)} .feed .blk{color:var(--green)}
+  .feed .t{color:#5d616b} .feed .trk{color:var(--red);font-weight:700} .feed .blk{color:var(--green);font-weight:700} .feed .norm{color:var(--mute)}
+  .feed-key{font-size:11px;color:var(--mute);margin:-6px 0 8px} .feed-key b{font-weight:700}
   .empty{color:var(--mute);font-size:13px;padding:8px 0}
   svg text{font-family:var(--sans)}
   .rank{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:14px}
@@ -76,7 +77,7 @@
   <div class="counter">
     <div class="stat"><b id="c-companies">0</b><span>companies contacted</span></div>
     <div class="stat green"><b id="c-blocked">0</b><span>blocked</span></div>
-    <div class="stat mute"><b id="c-suspects">0</b><span>caught by our model</span></div>
+    <div class="stat mute" id="s-suspects" hidden><b id="c-suspects">0</b><span>caught by our detector</span></div>
   </div>
   <div class="controls">
     <input id="app" placeholder="App to test (e.g. Block Blast)" list="apps" size="22">
@@ -84,6 +85,7 @@
     <button id="start">Start</button><button id="end">End</button>
     <select id="session" title="Which session to show"></select>
     <button id="shield" class="off">SHIELD OFF</button>
+    <a href="/story" style="color:var(--amber);font-weight:700;text-decoration:none;font-size:14px">Shield story →</a>
   </div>
 </header>
 
@@ -95,8 +97,8 @@
 
   <section class="right">
     <div class="two">
-      <div class="panel"><h2>Suspected trackers · not on any list</h2><div id="flags"></div></div>
-      <div class="panel"><h2>Live lookups</h2><div class="feed" id="feed"></div></div>
+      <div class="panel"><h2>Suspected trackers · not on our blocklists</h2><div id="flags"></div></div>
+      <div class="panel"><h2>Live lookups</h2><div class="feed-key"><b style="color:var(--red)">● tracker</b> · <b style="color:var(--green)">⛔ blocked</b> · <b>normal</b></div><div class="feed" id="feed"></div></div>
     </div>
     <div class="panel">
       <h2>Tracker Web · the same companies inside every app</h2>
@@ -136,12 +138,17 @@ function renderReceipt(st){
   if(!st.receipt.length) h += `<div class="r-center r-small" style="padding:16px 0">Waiting for lookups...<br>Join DigIn and open an app.</div>`;
   for(const g of st.receipt){
     const sus = g.category === "Suspected";
-    h += `<div class="r-cat ${sus?"r-sus":""}">${sus?"Caught by our model":esc(g.category)} (${g.companies.length})</div>
+    h += `<div class="r-cat ${sus?"r-sus":""}">${sus?"Caught by our detector":esc(g.category)} (${g.companies.length})</div>
           <div class="r-note">${esc(g.note)}</div>`;
     for(const c of g.companies){
       const name = c.company.length > 26 ? c.company.slice(0,25)+"…" : c.company;
       h += `<div class="r-row"><span>${esc(name)}</span><span class="dots"></span><span>x${c.hits}</span>${c.blocked?` <span class="r-blocked">BLOCKED</span>`:""}</div>`;
     }
+  }
+  if((st.background||[]).length){
+    h += `<div class="r-cat" style="color:#666">Background (other apps on the phone)</div>
+          <div class="r-note">Not this app. Shown so you know, not counted below.</div>`;
+    for(const b of st.background) h += `<div class="r-row" style="color:#666"><span>${esc(b.label)}</span><span class="dots"></span><span>x${b.hits}</span></div>`;
   }
   h += `<div class="r-rule"></div>
     <div class="r-row r-total"><span>COMPANIES</span><span class="dots"></span><span>${t.companies}</span></div>
@@ -154,7 +161,7 @@ function renderReceipt(st){
 function renderFeed(st){
   if(!st.recent.length){ $("#feed").innerHTML = `<div class="empty">No lookups yet.</div>`; return; }
   $("#feed").innerHTML = st.recent.map(r => `<div><span class="t">${fmtTime(r.ts)}</span>
-    <span class="${r.blocked?"blk":(r.tracker?"trk":"")}">${r.blocked?"⛔ ":(r.tracker?"● ":"")}${esc(r.qname)}</span></div>`).join("");
+    <span class="${r.blocked?"blk":(r.tracker?"trk":"norm")}">${r.blocked?"⛔ ":(r.tracker?"● ":"")}${esc(r.qname)}</span></div>`).join("");
 }
 
 function renderSessions(st){
@@ -180,7 +187,7 @@ async function refreshSlow(){
   try{
     const flags = await (await fetch("/api/flags")).json();
     const live = flags.filter(f => f.status !== "dismissed");
-    $("#c-suspects").textContent = live.length;
+    $("#c-suspects").textContent = live.length; $("#s-suspects").hidden = live.length === 0;
     $("#flags").innerHTML = flags.length ? flags.slice(0,8).map(f => `
       <div class="flag ${esc(f.status)}">
         <div class="d">${esc(f.domain)}</div>
@@ -188,7 +195,7 @@ async function refreshSlow(){
         <div class="why">${Math.round(f.score*100)}% · ${esc((f.reasons||[]).join(" + "))}</div>
         <div class="acts">${f.status==="auto_blocked" ? "<b style='color:var(--green)'>Auto-blocked</b>" :
           `<button data-d="${esc(f.domain)}" data-s="auto_blocked">Block</button><button data-d="${esc(f.domain)}" data-s="dismissed">Dismiss</button>`}</div>
-      </div>`).join("") : `<div class="empty">Nothing yet. The model flags domains that aren't on any blocklist.</div>`;
+      </div>`).join("") : `<div class="empty">Nothing yet. The detector flags domains that aren't on any blocklist.</div>`;
     document.querySelectorAll(".flag button").forEach(b => b.onclick = () => post("/api/flag",{domain:b.dataset.d,status:b.dataset.s}));
 
     const web = await (await fetch("/api/web")).json();

@@ -9,6 +9,7 @@ Also importable by bridge/feedback.py (Pranshu) to decide when the box should cl
 """
 import importlib.util
 import os
+import re
 import sys
 from functools import lru_cache
 
@@ -34,6 +35,72 @@ except Exception as e:  # noqa: BLE001
 
 SYSTEM = ("connectivitycheck.gstatic.com", "connectivitycheck.android.com", "clients3.google.com",
           "captive.apple.com", "time.android.com", "time.apple.com", "mtalk.google.com")
+
+# Other apps / the phone itself talking in the background. They show up in every session no matter
+# which app is tested, so the receipt puts them on one "Background" line instead of the app's total.
+# (label, app-name words, domain suffixes): if the tested app's name contains one of the words, that
+# group is NOT background (e.g. Snapchat domains in a Snapchat session count normally).
+BACKGROUND = [
+    ("Apple / iCloud", ("apple", "icloud", "iphone"),
+     ("apple.com", "icloud.com", "aaplimg.com", "apple-dns.net", "mzstatic.com", "apple-cloudkit.com",
+      "icloud-content.com", "cdn-apple.com", "apple-mapkit.com")),
+    ("WhatsApp", ("whatsapp",), ("whatsapp.net", "whatsapp.com")),
+    ("Snapchat", ("snap",), ("snapchat.com", "sc-cdn.net", "sc-static.net", "snapkit.com", "snap-dev.net")),
+]
+
+# Owner names from the lists that mean nothing to a person reading the receipt.
+# Volentio JSD Ltd runs jsDelivr (cdn.jsdelivr.net), a free public code CDN.
+DISPLAY = {"Volentio JSD": "jsDelivr (code CDN)"}
+
+# Classify by what a domain DOES, not only who owns it: an ad server run by a company the lists file
+# under "Content" (amazon-adsystem.com, *.advertising.a2z.com, pagead2...) is still advertising.
+AD_PARTS = {"ad", "ads", "adsystem", "advertising", "adserver", "adservice", "adserv", "pagead",
+            "adx", "doubleclick", "ssp", "rtb", "vast", "adsapi"}
+ANALYTICS_PARTS = {"analytics", "metrics", "telemetry", "measurement", "crashlytics"}
+
+
+def parts(domain):
+    """Whole name parts: 'ssp-win.startappservice.com' -> {ssp, win, startappservice, com}."""
+    return set(re.split(r"[.\-]", domain.lower().strip(".")))
+
+
+def by_function(names, category):
+    """Upgrade a 'Content' (or unknown) category when a domain name says it serves ads/analytics."""
+    if category not in (None, "Content"):
+        return category
+    p = set()
+    for n in names:
+        p |= parts(n)
+    if p & AD_PARTS:
+        return "Advertising"
+    if p & ANALYTICS_PARTS:
+        return "Analytics"
+    return category
+
+
+def base(name):
+    """Registrable name: ntusus.bidease.com -> bidease.com, a.b.co.uk -> b.co.uk."""
+    p = name.lower().strip(".").split(".")
+    if len(p) >= 3 and p[-2] in ("co", "com", "net", "org", "gov", "ac", "edu") and len(p[-1]) == 2:
+        return ".".join(p[-3:])
+    return ".".join(p[-2:])
+
+
+def display(name):
+    return DISPLAY.get(name, name)
+
+
+def background(names, app=None):
+    """Label of the background group these names belong to, or None. Never the tested app itself."""
+    a = (app or "").lower()
+    for label, app_words, suffixes in BACKGROUND:
+        if any(w in a for w in app_words):
+            continue
+        for n in names:
+            d = n.lower().strip(".")
+            if any(d == s or d.endswith("." + s) for s in suffixes):
+                return label
+    return None
 
 
 _holdout = ()  # companies removed for demo mode (settings.demo_holdout), set by app.py
