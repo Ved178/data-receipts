@@ -65,74 +65,46 @@ function renderTimeline(t) {
   $("#tl-title").textContent = `Whack-a-mole · ${s.app_name} · session #${s.session_id} · Shield ${s.shield.toUpperCase()}`;
   const cos = t.companies;
   if (!cos.length) { render($("#tl"), `<div class="empty">No tracking companies in this session.</div>`); return; }
-
-  // A caught tracker is a raw lookup name (api16-access-ttp.tiktokpangle.us): show its registrable
-  // name (tiktokpangle.us), full name on hover. Two caught names under one base keep their full names.
-  const baseCount = {};
-  for (const c of cos) if (c.category === "Suspected") baseCount[baseDomain(c.company)] = (baseCount[baseDomain(c.company)] || 0) + 1;
-  const label = c => c.category === "Suspected" && baseCount[baseDomain(c.company)] === 1 ? baseDomain(c.company) : c.company;
-  const labelOf = Object.fromEntries(cos.map(c => [c.company, label(c)]));
-
-  // Labels on top: first block + network switches (merged when < 5 s apart), stacked so they never overlap.
-  const labels = [];
-  if (t.first_block) labels.push({t: t.first_block.t, text: `Shield blocks ${short(t.first_block.company, 22)}`, color: "#33d17a", dash: "3 5", w: 2.5});
-  const merged = [];
-  for (const sw of t.switches) {
-    const m = merged[merged.length - 1];
-    if (m && sw.t - m.t < 5) m.names.push(sw.company); else merged.push({t: sw.t, names: [sw.company]});
+  // Two rows only: every Shield block on one line, every hidden tracker the detector caught on another.
+  const blockedCos = new Set(), blocks = [], caught = [];
+  for (const c of cos) for (const [sec, st, qname] of c.events) {
+    if (st === "blocked") { blockedCos.add(c.company); blocks.push([sec, qname, c.company]); }
+    else if (st === "caught") caught.push([sec, qname, c.company]);
   }
-  for (const m of merged) {   // at most two names per label, the rest as a count: the rows below name them all
-    const names = m.names.map(n => short(labelOf[n] || n, 22));
-    const text = "→ " + names.slice(0, 2).join(" + ") + (names.length > 2 ? ` + ${names.length - 2} more` : "");
-    labels.push({t: m.t, text, color: "#ffb020", dash: "6 5", w: 3, bold: true});
-  }
-
-  const L = 330, W = 1500, R = 30, rowH = 36, charW = 10.5;
-  // A session left running for hours would squeeze every mark into the first pixels: while it is
-  // live, the axis ends shortly after the last tracker lookup instead of "now".
-  const lastT = Math.max(0, ...cos.flatMap(c => c.events.map(e => e[0])));
-  const span = Math.max(s.end_ts ? t.duration_s : Math.min(t.duration_s, lastT * 1.1 + 5), 10), x = sec => L + (W - L - R) * Math.min(Math.max(sec, 0), span) / span;
-  labels.sort((a, b) => a.t - b.t);
-  const ends = [];   // right edge of the last label on each stacking level
-  for (const lb of labels) {
-    const lx = x(lb.t), len = lb.text.length * charW;
-    lb.anchorEnd = lx + len + 8 > W;
-    const from = lb.anchorEnd ? lx - len - 8 : lx, to = lb.anchorEnd ? lx : lx + len + 8;
-    let lvl = ends.findIndex(e => e < from);
-    if (lvl < 0) { lvl = ends.length; ends.push(0); }
-    ends[lvl] = to; lb.lvl = lvl;
-  }
-  const top = 34 + 26 * Math.max(ends.length, 1) + 12, H = top + rowH * cos.length + 50;
-  let g = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Timeline of tracker lookups">`;
-  cos.forEach((c, i) => {   // row stripes first, so guide lines and marks sit on top of them
-    if (i % 2) g += `<rect x="0" y="${top + rowH * i + 2}" width="${W}" height="${rowH - 4}" fill="#1b1e25"/>`;
-  });
+  const firstCaught = {};   // one label per caught company (by main name), at its first appearance
+  for (const [sec, , co] of caught) { const k = baseDomain(co); if (!(k in firstCaught) || sec < firstCaught[k]) firstCaught[k] = sec; }
+  const L = 330, W = 1500, R = 40, top = 40, rowH = 90, H = top + rowH * 2 + 50;
+  const lastT = Math.max(0, ...blocks.map(e => e[0]), ...caught.map(e => e[0]));
+  const span = Math.max(s.end_ts ? t.duration_s : Math.min(t.duration_s, lastT * 1.1 + 5), 10);
+  const x = sec => L + (W - L - R) * Math.min(Math.max(sec, 0), span) / span;
+  const y1 = top + rowH / 2, y2 = top + rowH * 1.5;
+  let g = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Shield blocks and hidden trackers over time">`;
+  g += `<rect x="0" y="${top + rowH + 2}" width="${W}" height="${rowH - 4}" fill="#1b1e25"/>`;
   const step = tickStep(span);
-  for (let sec = 0; sec <= span; sec += step) {
-    g += `<line x1="${x(sec)}" y1="${top - 10}" x2="${x(sec)}" y2="${H - 40}" stroke="#2a2d36" stroke-width="1.5"/>
+  for (let sec = 0; sec <= span; sec += step)
+    g += `<line x1="${x(sec)}" y1="${top}" x2="${x(sec)}" y2="${H - 40}" stroke="#2a2d36" stroke-width="1.5"/>
           <text x="${x(sec)}" y="${H - 12}" text-anchor="middle" fill="#8b8f9a" font-size="18">${fmtTick(sec)}</text>`;
+  g += `<text x="${L - 20}" y="${y1 - 4}" text-anchor="end" fill="#eceae4" font-size="21" font-weight="700">Known trackers blocked</text>
+        <text x="${L - 20}" y="${y1 + 20}" text-anchor="end" fill="#ff4d3d" font-size="18" font-weight="700">${blockedCos.size} compan${blockedCos.size === 1 ? "y" : "ies"} blocked</text>
+        <text x="${L - 20}" y="${y2 - 4}" text-anchor="end" fill="#eceae4" font-size="21" font-weight="700">Hidden trackers caught</text>
+        <text x="${L - 20}" y="${y2 + 20}" text-anchor="end" fill="#ffb020" font-size="18" font-weight="700">${Object.keys(firstCaught).length} caught by our detector</text>`;
+  const seen = new Set();
+  for (const [sec, qname, co] of blocks) {
+    const ex = x(sec), key = Math.round(ex / 7); if (seen.has(key)) continue; seen.add(key);
+    g += `<path d="M${ex - 8} ${y1 - 8}L${ex + 8} ${y1 + 8}M${ex + 8} ${y1 - 8}L${ex - 8} ${y1 + 8}" stroke="#ff4d3d" stroke-width="4" stroke-linecap="round"><title>${esc(co)} · ${esc(qname)} · ${Math.round(sec)}s</title></path>`;
   }
-  for (const lb of labels) {
-    const lx = x(lb.t), ly = 28 + 26 * lb.lvl;
-    g += `<line x1="${lx}" y1="${ly + 6}" x2="${lx}" y2="${H - 40}" stroke="${lb.color}" stroke-width="${lb.w}" stroke-dasharray="${lb.dash}"/>
-          <text x="${lb.anchorEnd ? lx - 6 : lx + 6}" y="${ly}" fill="${lb.color}" font-size="18" font-weight="${lb.bold ? 800 : 700}"
-                text-anchor="${lb.anchorEnd ? "end" : "start"}">${esc(lb.text)}</text>`;
+  for (const [sec, qname, co] of caught)
+    g += `<circle cx="${x(sec)}" cy="${y2}" r="10" fill="#ffb020" stroke="#0e0f12" stroke-width="2"><title>${esc(qname)} · ${Math.round(sec)}s</title></circle>`;
+  // Labels above or below the dots; a label that would overlap another is skipped (hover a dot for its name).
+  const ends = [-1e9, -1e9];
+  for (const [name, sec] of Object.entries(firstCaught).sort((a, b) => a[1] - b[1])) {
+    const text = short(name, 20), lx = x(sec), w = text.length * 9.6 + 14;
+    const anchorEnd = lx + w > W, from = anchorEnd ? lx - w : lx - 6, to = anchorEnd ? lx + 6 : lx + w;
+    const lvl = ends.findIndex(e => e < from); if (lvl < 0) continue;
+    ends[lvl] = to;
+    g += `<text x="${anchorEnd ? lx + 6 : lx - 6}" y="${lvl ? y2 + 32 : y2 - 18}" text-anchor="${anchorEnd ? "end" : "start"}" fill="#ffb020" font-size="17" font-weight="800">${esc(text)}</text>`;
   }
-  cos.forEach((c, i) => {
-    const y = top + rowH * i + rowH / 2, sus = c.category === "Suspected";
-    g += `<text x="${L - 18}" y="${y + 7}" text-anchor="end" fill="${sus ? "#ffb020" : "#eceae4"}" font-size="20" font-weight="${sus ? 800 : 600}">${esc(short(labelOf[c.company], 26))}<title>${esc(c.company)}</title></text>`;
-    const seen = new Set();   // one mark per ~6 px per status: a burst of lookups is one mark, not a blob
-    for (const [sec, st, qname] of c.events) {
-      const ex = x(sec), key = st + Math.round(ex / 6);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      const tip = `<title>${esc(qname)} · ${st} · ${Math.round(sec)}s</title>`;
-      if (st === "blocked") g += `<path d="M${ex - 8} ${y - 8}L${ex + 8} ${y + 8}M${ex + 8} ${y - 8}L${ex - 8} ${y + 8}" stroke="#ff4d3d" stroke-width="4" stroke-linecap="round">${tip}</path>`;
-      else if (st === "caught") g += `<circle cx="${ex}" cy="${y}" r="10" fill="#ffb020" stroke="#0e0f12" stroke-width="2">${tip}</circle>`;
-      else g += `<circle cx="${ex}" cy="${y}" r="7" fill="#6b7080">${tip}</circle>`;
-    }
-  });
-  render($("#tl"), g + `</svg>`);
+  render($("#tl"), g + `</svg><div style="font-size:20px;color:var(--text);margin-top:10px">Even with Shield on, the game kept trying new ad servers. Our detector caught them.</div>`);
 }
 
 function setSelect(sel, html, value) {
