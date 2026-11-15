@@ -228,6 +228,13 @@ class DetectorTest(unittest.TestCase):
         for f in flags.values():
             self.assertTrue(0 <= f["score"] <= 1)
 
+    def test_later_off_session_does_not_unflag_earlier_round(self):
+        # A Shield-OFF session played AFTER the Shield-ON round also contacts newadnet.io
+        self.conn.execute("INSERT INTO sessions VALUES (3, '', 'Test Game', 3000, 3100)")
+        self.conn.execute("INSERT INTO raw_lookups(ts, device, session_id, qname) VALUES (3005, '10.42.0.9', 3, 'ssp-win.newadnet.io')")
+        self.conn.commit()
+        self.assertIn("newadnet.io", {f["domain"] for f in self.D.detect(self.conn)})
+
     def test_no_baseline_no_flags(self):
         self.conn.execute("DELETE FROM raw_lookups WHERE session_id=1")
         self.assertEqual(self.D.detect(self.conn), [])
