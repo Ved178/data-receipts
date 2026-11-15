@@ -1,0 +1,27 @@
+digin_run1 — session notes for the ML layer
+Device: Android phone on DigIn, IP 10.42.0.33
+Times are UTC (board clock = Chicago + 6 h). Log lines are dnsmasq format.
+Ignore the first part of the file (lines from dnsmasq[1113] and dnsmasq[1395] = earlier tests).
+The real run is every line from dnsmasq[1688].
+
+Sessions (approximate):
+- 23:36 - 23:41  Instagram (background)
+- 23:37 - 23:41  Chrome -> cnn.com
+- 23:41 - 23:45  Block Blast  (one ad shown ~23:43:43, served by InMobi; impression pings to Aarki + AppsFlyer)
+
+Blocklist active during the run (answered 0.0.0.0, shows as "config <domain> is 0.0.0.0"):
+applovin.com, vungle.com, adsrvr.org, doubleclick.net, googlesyndication.com, 2mdn.net,
+tiktokpangle-cdn-us.com, doubleverify.com
+
+Suggested DEMO_REMOVED_TRACKER: applvn.com
+(AppLovin's second domain; not on our list; appeared right after applovin.com was blocked)
+
+Log line formats:
+  query[A] <domain> from 10.42.0.33          -> a lookup
+  reply <domain> is <CNAME>                  -> next reply line is the next hop in the CNAME chain
+  reply <domain> is <ip>                     -> answer IP
+  cached <domain> is <ip>                    -> answered from the box's cache
+  config <domain> is 0.0.0.0                 -> blocked by our blocklist
+
+Question for Ved: should Pranshu write an adapter that turns digin.log into the raw_lookups table,
+or will you parse the log directly?
