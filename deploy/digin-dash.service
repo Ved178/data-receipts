@@ -1,0 +1,14 @@
+[Unit]
+Description=Data Receipt dashboard (http://10.42.0.1)
+After=digin-dns.service
+
+[Service]
+Type=simple
+Environment=DIGIN_DB=/home/arduino/digin/digin.db
+UMask=0000
+ExecStart=/usr/bin/python3 /home/arduino/madhacks26/dashboard/app.py --port 80
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
