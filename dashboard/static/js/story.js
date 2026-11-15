@@ -107,6 +107,24 @@ function renderTimeline(t) {
   render($("#tl"), g + `</svg><div style="font-size:20px;color:var(--text);margin-top:10px">Even with Shield on, the game kept trying new ad servers. Our detector caught them.</div>`);
 }
 
+/** "Where the trackers went": Shield OFF vs Shield ON as two bars on the same scale.
+ *  Same numbers as the before/after card (/api/compare). */
+function renderWhere(c) {
+  if (!c.off || !c.on) { render($("#tl"), `<div class="empty">Needs one Shield-OFF and one Shield-ON session of the same app.</div>`); return; }
+  const off = c.off.companies_reached, blocked = c.on.companies_blocked, caught = c.on.caught.length,
+        through = c.on.companies_through.length, max = Math.max(off, blocked + caught + through, 1);
+  const seg = (n, color, label) => n ? `<div class="wseg" style="flex:${n} 0 0;background:${color}" title="${n} ${label}"><b>${n}</b></div>` : "";
+  const bar = (label, sub, inner, total) => `<div class="wrow"><div class="wlab"><b>${label}</b><span>${sub}</span></div>
+      <div class="wtrack"><div class="wbar" style="width:${100 * total / max}%">${inner}</div></div></div>`;
+  const chips = [...new Set(c.on.caught.map(d => baseDomain(d)))].map(d => `<span class="wchip">${esc(short(d, 22))}</span>`).join("");
+  const onTotal = blocked + caught + through;
+  render($("#tl"), `
+    ${bar("Shield OFF", `${off} companies reached the phone`, seg(off, "#ff4d3d", "companies reached the phone"), off)}
+    ${bar("Shield ON", `${onTotal} companies tried`, seg(blocked, "#33d17a", "blocked by Shield") + seg(caught, "#ffb020", "caught by our detector") + seg(through, "#6b7080", "got through"), onTotal)}
+    ${caught ? `<div class="wrow"><div class="wlab"></div><div class="wtrack"><div class="wchips" style="margin-left:${100 * blocked / max}%">${chips}</div></div></div>` : ""}
+    <div class="wcap">Shield blocks the known trackers. Our detector catches the hidden ones.</div>`);
+}
+
 function setSelect(sel, html, value) {
   if (render(sel, html) || sel.value !== String(value)) sel.value = String(value);
 }
@@ -122,6 +140,8 @@ async function refresh() {
   const apps = [...new Set([...c.apps_with_both, ...(app ? [app] : [])])];
   setSelect($("#app"), apps.map(a => `<option>${esc(a)}</option>`).join(""), app);
   renderCompare(c);
+  renderWhere(c);
+  return;   // the timeline is replaced by the "Where the trackers went" chart
 
   const withData = sessions.filter(s => s.lookups);
   if (followCompare || !withData.some(s => String(s.session_id) === sessionId)) {

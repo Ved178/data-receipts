@@ -5,6 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Shield Story · Data Receipt</title>
 <link rel="stylesheet" href="/static/css/app.css">
+<style>
+  .wsw{display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:-2px;margin-right:6px}
+  .wrow{display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:center;margin:14px 0}
+  .wlab b{display:block;font-size:22px} .wlab span{color:var(--mute);font-size:15px}
+  .wtrack{min-width:0}
+  .wbar{display:flex;height:64px;border-radius:10px;overflow:hidden;min-width:60px}
+  .wseg{display:flex;align-items:center;justify-content:center;min-width:48px;border-right:2px solid var(--ink)}
+  .wseg:last-child{border-right:0}
+  .wseg b{font-family:var(--mono);font-size:30px;color:#0e0f12}
+  .wchips{display:flex;flex-wrap:wrap;gap:8px;margin-top:-4px}
+  .wchip{font-family:var(--mono);font-size:14px;font-weight:700;color:#ffb020;border:1px solid #6b4a0a;background:#2a1f08;border-radius:999px;padding:3px 10px}
+  .wcap{font-size:20px;margin-top:18px}
+  @media (max-width:700px){.wrow{grid-template-columns:1fr;gap:6px}}
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -17,7 +31,7 @@
 
 <div class="sessionbar">
   <label class="field"><span>App</span><select id="app" title="App for the before / after"></select></label>
-  <label class="field"><span>Timeline session</span><select id="session" title="Session for the timeline"></select></label>
+  <label class="field" hidden><span>Timeline session</span><select id="session" title="Session for the timeline"></select></label>
 </div>
 
 <main class="story">
@@ -26,10 +40,12 @@
     <div class="ba" id="ba"><div class="empty">Loading…</div></div>
   </section>
   <section class="panel">
-    <h2 id="tl-title">Whack-a-mole</h2>
+    <h2 id="tl-title">Where the trackers went</h2>
     <div class="legend">
-      <span><svg width="22" height="22"><path d="M5 5L17 17M17 5L5 17" stroke="#ff4d3d" stroke-width="4"/></svg>blocked by Shield</span>
-      <span><svg width="22" height="22"><circle cx="11" cy="11" r="8" fill="#ffb020"/></svg>hidden tracker caught by our detector</span>
+      <span><i class="wsw" style="background:#ff4d3d"></i>reached the phone</span>
+      <span><i class="wsw" style="background:#33d17a"></i>blocked by Shield</span>
+      <span><i class="wsw" style="background:#ffb020"></i>caught by our detector</span>
+      <span><i class="wsw" style="background:#6b7080"></i>got through</span>
     </div>
     <div id="tl"><div class="empty">Loading…</div></div>
   </section>
