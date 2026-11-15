@@ -1,125 +1,264 @@
-// /static/new.html: consumer page. Front end only: uses the existing APIs exactly as they are.
-// Every number on screen comes from /api/state, /api/flags, /api/web or /api/compare.
-import {$, esc, short, fmtDur, fmtClock, render, getJSON, postJSON, poll, TRACKING, catLabel} from "./lib.js";
+// /static/new.html: copy of dashboard.js with consumer wording. Same APIs, real data only.
+import {$, esc, short, fmtDur, fmtClock, render, getJSON, postJSON, poll, sequence, TRACKING, catLabel} from "./lib.js";
 
-let flags = [];
-let lastState = null;
+const url = new URLSearchParams(location.search);
+let chosen = url.get("session") || "current";   // "current" | "all" | session id
+let flags = [];             // every ml_flags row (slow poll)
+let caughtHere = null;      // Set of flagged domains the selected session contacted (null = not loaded)
+let live = null;            // {start_ts} of the session shown, when it is still running
+let clockSkew = 0;          // server clock - browser clock, seconds
+const stateSeq = sequence();
 
-const row = (name, val, extra = "") =>
-  `<div class="r-row"><span>${name}</span><span class="dots"></span><span>${val}</span>${extra}</div>`;
+// ---------- render ----------
 
-function renderHero(st) {
-  const s = st.session;
-  $("#app-name").textContent = s ? s.app_name : "No app yet";
-  const live = s && !s.end_ts;
-  $("#live").className = "live" + (live ? "" : " off");
-  $("#live b").textContent = live ? "LIVE" : "LAST SESSION";
-  $("#app-meta").textContent = s ? `${fmtDur(st.duration_s)} · ${st.totals.lookups} lookups${live ? "" : " · ended"}` : "Join DigIn and press Start";
-  if (document.activeElement !== $("#app") && !$("#app").value && st.selected_app) $("#app").value = st.selected_app;
-}
+const row = (name, val, cls = "", extra = "") =>
+  `<div class="r-row ${cls}"><span class="name">${name}</span><span class="dots"></span><span class="val">${val}</span>${extra}</div>`;
 
-function renderSee(st) {
+function renderReceipt(st) {
   const s = st.session, t = st.totals;
-  let h = `<div class="r-title">DATA RECEIPT</div><div class="r-sub">DigIn · MadHacks 2026 · Let's dig in</div><div class="r-rule"></div>
-    ${row("APP", `<b>${esc(s ? s.app_name : "-")}</b>`)}${row("TIME", fmtDur(st.duration_s))}${row("LOOKUPS", t.lookups)}<div class="r-rule"></div>`;
-  const groups = st.receipt.filter(g => g.category !== "Suspected" && TRACKING.has(g.category));
-  if (!groups.length) h += `<div class="r-note" style="text-align:center;padding:12px 0">Waiting for this app to reach out…</div>`;
-  for (const g of groups) {
-    h += `<div class="r-cat">${esc(catLabel(g.category))} (${g.companies.length})</div>${g.note ? `<div class="r-note">${esc(g.note)}</div>` : ""}`;
-    for (const c of g.companies) h += row(esc(short(c.company, 24)), `x${c.hits}`, c.blocked ? ` <span class="r-blk">BLOCKED</span>` : "");
+  let h = `<div class="r-center r-title">DATA RECEIPT</div>
+    <div class="r-center r-small">DigIn · MadHacks 2026 · Let's dig in</div><div class="r-rule"></div>
+    ${row("APP", `<b>${esc(s ? s.app_name : "All sessions")}</b>`)}
+    ${row("TIME", `<span id="r-time">${fmtDur(st.duration_s)}</span>`)}
+    ${row("LOOKUPS", t.lookups)}
+    ${row("DOMAINS", t.domains)}
+    <div class="r-rule"></div>`;
+  if (!st.receipt.length) {
+    h += `<div class="r-center r-small" style="padding:16px 0">Press Start, then open an app on your phone.</div>`;
+  }
+  for (const g of st.receipt) {
+    h += `<div class="r-cat ${g.category === "Suspected" ? "r-sus" : ""}">${esc(catLabel(g.category))} (${g.companies.length})</div>
+          <div class="r-note">${esc(g.note)}</div>`;
+    for (const c of g.companies) {
+      h += row(esc(c.company), `x${c.hits}`, "", c.blocked ? ` <span class="r-blocked">BLOCKED</span>` : "");
+    }
   }
   if ((st.background || []).length) {
-    h += `<div class="r-cat r-bg">Background (other apps on the phone)</div><div class="r-note">Not this app. Not counted.</div>`;
-    for (const b of st.background) h += `<div class="r-bg">${row(esc(b.label), `x${b.hits}`)}</div>`;
+    h += `<div class="r-cat r-bg">Background (other apps on the phone)</div>
+          <div class="r-note">Not this app. Shown so you know, not counted below.</div>`;
+    for (const b of st.background) h += row(esc(b.label), `x${b.hits}`, "r-bg");
   }
-  h += `<div class="r-rule"></div>${row("<span class='r-total'>COMPANIES</span>", `<span class='r-total'>${t.companies}</span>`)}
-        ${row("<span class='r-total r-blk'>BLOCKED</span>", `<span class='r-total r-blk'>${t.companies_blocked}</span>`)}`;
-  render($("#receipt"), h);
-  $("#s-companies").textContent = t.companies;
-  $("#s-lookups").textContent = t.lookups;
+  h += `<div class="r-rule"></div>
+    ${row("COMPANIES", t.companies, "r-total")}
+    ${row("BLOCKED", t.companies_blocked, "r-total r-blocked")}
+    <div class="r-rule"></div>
+    <div class="r-center r-small">We saw who was contacted, never what was sent.<br>Shield: ${esc(st.shield.toUpperCase())} · thank you for digging in</div>`;
+  // The running clock is patched in place (tickClock) so a live session does not rebuild the receipt every poll.
+  const stable = h.replace(/<span id="r-time">[^<]*<\/span>/, `<span id="r-time"></span>`);
+  render($("#receipt"), stable);
+  $("#r-time").textContent = fmtDur(st.duration_s);
 }
 
-function renderBlock(st, cmp) {
-  const on = st.shield === "on";
-  const b = $("#shield");
-  b.className = "shield " + (on ? "on" : "off");
-  b.setAttribute("aria-pressed", on);
-  b.querySelector(".lbl").textContent = on ? "SHIELD ON" : "SHIELD OFF";
-  $("#s-blocked").textContent = st.totals.companies_blocked;
-  // "Your app keeps working": real numbers only when this session is the app's latest Shield-ON round.
-  const s = st.session, r = cmp && cmp.on;
-  if (s && r && r.session_id === s.session_id && r.game_still_worked)
-    render($("#works"), `<b>✓ Your app keeps working.</b> Its own servers answered ${r.game_lookups_ok} times, 0 blocked.`);
-  else render($("#works"), on ? "<b>✓ Your app keeps working.</b> Shield blocks trackers, never the app's own servers."
-                               : "Turn Shield on to cut the trackers off. Your app keeps working.");
+function renderStats(st, caught) {
+  const tile = (n, label, color) =>
+    `<div class="stat ${n ? color : "zero"}"><b>${n}</b><span>${label}</span></div>`;
+  const vals = [st.totals.companies, st.totals.companies_blocked, caught];
+  if (render($("#stats"), tile(0, "companies this app shared data with", "red") +
+      tile(0, "blocked by Shield", "green") + tile(0, "hidden trackers caught", "amber")))
+    lastShown = [0, 0, 0];
+  [...$("#stats").querySelectorAll(".stat")].forEach((el, i) => countTo(el, i, vals[i]));
 }
 
-function renderCatch(st) {
-  const sus = st.receipt.find(g => g.category === "Suspected");
-  const here = new Set(sus ? sus.companies.map(c => c.company) : []);
-  // /api/flags already hides the model's sub-0.95 tier; detector (rules-v1) flags always show.
-  const mine = flags.filter(f => here.has(f.domain) && f.status !== "dismissed").sort((a, b) => b.score - a.score);
-  if (!mine.length) { render($("#caught"), `<div class="empty">Nothing hidden caught in this session yet.</div>`); return; }
-  render($("#caught"), `<div class="flags">${mine.map(f => {
-    const model = f.model_version !== "rules-v1";
-    return `<div class="flag"><div class="flag-top"><span class="flag-dom">${esc(f.domain)}</span>
-        <span class="flag-score">${Math.round(f.score * 100)}%</span></div>
-      <span class="who ${model ? "model" : ""}">${model ? "model" : "detector"}</span>
-      <ul>${(f.reasons || []).slice(0, 4).map(r => `<li>${esc(r)}</li>`).join("")}</ul></div>`;
-  }).join("")}</div>`);
-}
-
-function renderWeb(web) {
-  const edges = new Map();
-  for (const e of web.edges) {
-    if (!TRACKING.has(e.category)) continue;
-    const k = e.app + "\u0000" + e.company;
-    const m = edges.get(k) || {app: e.app, company: e.company, hits: 0};
-    m.hits += e.hits; edges.set(k, m);
-  }
-  const list = [...edges.values()];
-  if (!list.length) { render($("#web"), `<div class="empty">Record two or more apps to see this.</div>`); return; }
-  const apps = [...new Set(list.map(e => e.app))];
-  const reach = {};
-  for (const e of list) reach[e.company] = (reach[e.company] || 0) + 1;
-  const cos = Object.keys(reach).sort((a, b) => reach[b] - reach[a]).slice(0, 12);
-  const W = 1000, LX = 250, RX = 640, rowH = 34, pad = 16, H = pad * 2 + rowH * Math.max(apps.length, cos.length);
-  const y = (i, n) => pad + (H - pad * 2) * (i + .5) / n, max = Math.max(...list.map(e => e.hits), 1);
-  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Which tracking companies appear in which apps">`;
-  for (const e of list) {
-    const j = cos.indexOf(e.company); if (j < 0) continue;
-    const a = y(apps.indexOf(e.app), apps.length), c = y(j, cos.length), mid = (LX + RX) / 2;
-    s += `<path d="M${LX + 10} ${a} C ${mid} ${a}, ${mid} ${c}, ${RX - 10} ${c}" fill="none" stroke="#ff4d3d"
-          stroke-opacity="${.25 + .6 * e.hits / max}" stroke-width="${1.5 + 3 * e.hits / max}"/>`;
-  }
-  apps.forEach((a, i) => s += `<text x="${LX}" y="${y(i, apps.length) + 7}" text-anchor="end" fill="#eceae4" font-size="22" font-weight="800">${esc(short(a, 18))}</text>`);
-  cos.forEach((c, j) => s += `<circle cx="${RX}" cy="${y(j, cos.length)}" r="6" fill="#ff4d3d"/>
-     <text x="${RX + 16}" y="${y(j, cos.length) + 7}" fill="#eceae4" font-size="20">${esc(short(c, 26))} · <tspan fill="#8b8f9a">${reach[c]} app${reach[c] > 1 ? "s" : ""}</tspan></text>`);
-  render($("#web"), s + "</svg>");
+// Counters tick up smoothly when they change.
+let lastShown = [0, 0, 0];
+function countTo(el, i, n) {
+  const b = el.querySelector("b"), from = lastShown[i];
+  el.className = "stat " + (n ? ["red", "green", "amber"][i] : "zero");
+  if (from === n) { b.textContent = n; return; }
+  lastShown[i] = n;
+  const t0 = performance.now(), dur = 600;
+  const step = now => { const k = Math.min(1, (now - t0) / dur);
+    b.textContent = Math.round(from + (n - from) * (1 - Math.pow(1 - k, 3)));
+    if (k < 1 && lastShown[i] === n) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
 }
 
 function renderFeed(st) {
   render($("#feed"), st.recent.length ? st.recent.map(r =>
-    `<div><span style="color:#5d616b">${fmtClock(r.ts)}</span> <span class="${r.blocked ? "blk" : r.tracker ? "trk" : ""}">${r.blocked ? "⛔ " : ""}${esc(r.qname)}</span></div>`).join("")
-    : `<div>No lookups yet.</div>`);
+    `<div class="feed-row ${r.blocked ? "blk" : r.tracker ? "trk" : ""}" title="${esc(r.qname)}${r.blocked ? " (blocked)" : ""}">
+       <span class="t">${fmtClock(r.ts)}</span><span class="q">${esc(r.qname)}</span></div>`).join("")
+    : `<div class="empty">No lookups yet.</div>`);
 }
 
-async function refresh() {
-  const st = await getJSON("/api/state?session=current");
-  lastState = st;
-  const cmp = st.session ? await getJSON(`/api/compare?app=${encodeURIComponent(st.session.app_name)}`).catch(() => null) : null;
-  renderHero(st); renderSee(st); renderBlock(st, cmp); renderCatch(st); renderFeed(st);
+function renderSessions(st) {
+  const ids = st.sessions.map(s => String(s.session_id));
+  if (!["current", "all"].includes(chosen) && !ids.includes(chosen)) chosen = "current";
+  const opts = [`<option value="current">Live / latest session</option>`, `<option value="all">All recent lookups</option>`]
+    .concat(st.sessions.map(s =>
+      `<option value="${s.session_id}">#${s.session_id} ${esc(s.app_name)}${s.end_ts ? "" : " (live)"}</option>`));
+  const sel = $("#session");
+  if (render(sel, opts.join("")) || sel.value !== chosen) sel.value = chosen;
 }
+
+function renderStatus(st) {
+  const s = st.session, el = $("#status");
+  live = s && s.end_ts == null ? s : null;
+  el.className = "status" + (live ? " live" : "");
+  if (!s) el.textContent = "All recent lookups";
+  else if (!live) el.textContent = `#${s.session_id} ${s.app_name} · ended · ${fmtDur(st.duration_s)}`;
+  tickClock();
+  $("#end").disabled = !(live || st.sessions.some(x => x.end_ts == null));
+}
+
+function tickClock() {
+  if (!live) return;
+  const d = fmtDur(Date.now() / 1000 + clockSkew - live.start_ts);
+  $("#status").textContent = `LIVE · ${live.app_name} · ${d}`;
+  const t = $("#r-time");
+  if (t) t.textContent = d;
+}
+
+function setShield(on) {
+  $("#shield").setAttribute("aria-checked", String(on));
+  $("#shield-label").textContent = on ? "Shield on" : "Shield off";
+}
+
+/** Score at or above which a flag is shown as "High confidence"; below it (down to the scorer's
+ * 0.8 cutoff) it is "Possible". On fresh box sessions about 8 in 9 high-confidence flags were real. */
+const HIGH_CONFIDENCE = 0.95;
+
+function flagCard(f) {
+  const pct = Math.round(f.score * 100), d = esc(f.domain);
+  const acts = f.status === "auto_blocked"
+    ? `<span class="tag blocked">Blocked</span><button class="small" data-flag="${d}" data-status="suspected">Unblock</button>`
+    : `<button class="small" data-flag="${d}" data-status="auto_blocked">Block</button>
+       <button class="small" data-flag="${d}" data-status="dismissed" title="Not a tracker: hide it and stop flagging it">Dismiss</button>`;
+  return `<div class="flag ${esc(f.status)}${f.score < HIGH_CONFIDENCE && f.model_version !== "rules-v1" ? " possible" : ""}">
+      <div class="flag-top"><span class="flag-domain">${d}</span><span class="flag-score">${pct}%</span></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <ul class="reasons">${(f.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+      <div class="flag-acts">${acts}</div>
+    </div>`;
+}
+
+/** Only flags caught in the SELECTED session: a flagged domain this session contacted.
+ * The model's "Possible" tier (below 0.95) is filtered out by the server, so this is one list. */
+function renderFlags() {
+  if (caughtHere === null) return;
+  const mine = flags.filter(f => caughtHere.has(f.domain) && f.status !== "dismissed")
+    .sort((x, y) => y.score - x.score);
+  if (!mine.length) { render($("#flags"), `<div class="empty">Nothing caught in this session yet.</div>`); return; }
+  render($("#flags"), `<div class="flags">${mine.map(flagCard).join("")}</div>`);
+}
+
+/** Apps on the left, tracking companies on the right, one curve per (app, company). */
+function renderWeb(web) {
+  // One company can be filed under two categories in the same app (Google ads + analytics): merge them,
+  // and keep only tracking categories so a CDN or the app's own content never shows up as a tracker.
+  const edges = new Map();
+  for (const e of web.edges) {
+    if (!TRACKING.has(e.category)) continue;
+    const k = e.app + "\u0000" + e.company;
+    const m = edges.get(k) || {app: e.app, company: e.company, hits: 0, sus: false};
+    m.hits += e.hits; m.sus = m.sus || e.category === "Suspected";
+    edges.set(k, m);
+  }
+  const list = [...edges.values()];
+  if (!list.length) { render($("#web"), `<div class="empty">No trackers seen in any app session yet.</div>`); return; }
+  const apps = [...new Set(list.map(e => e.app))];
+  const reach = {}, total = {}, sus = {};
+  for (const e of list) {
+    reach[e.company] = (reach[e.company] || 0) + 1;
+    total[e.company] = (total[e.company] || 0) + e.hits;
+    sus[e.company] = sus[e.company] || e.sus;
+  }
+  const cos = Object.keys(reach).sort((a, b) => reach[b] - reach[a] || total[b] - total[a]).slice(0, 12);
+  const W = 600, LX = 150, RX = 380, rowH = 26, pad = 14;
+  const H = pad * 2 + rowH * Math.max(apps.length, cos.length);
+  const y = (i, n) => pad + (H - pad * 2) * (i + .5) / n;
+  const max = Math.max(...list.map(e => e.hits), 1);
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Which tracking companies appear in which apps">`;
+  for (const e of list) {
+    const j = cos.indexOf(e.company);
+    if (j < 0) continue;
+    const a = y(apps.indexOf(e.app), apps.length), c = y(j, cos.length), w = e.hits / max, mid = (LX + RX) / 2;
+    s += `<path d="M${LX + 8} ${a} C ${mid} ${a}, ${mid} ${c}, ${RX - 8} ${c}" fill="none"
+      stroke="${e.sus ? "#ffb020" : "#ff4d3d"}" stroke-opacity="${(.25 + .55 * w).toFixed(2)}" stroke-width="${(1 + 2.5 * w).toFixed(1)}"/>`;
+  }
+  apps.forEach((a, i) => {
+    s += `<text x="${LX}" y="${y(i, apps.length) + 4.5}" text-anchor="end" fill="#eceae4" font-size="13.5" font-weight="700">${esc(short(a, 19))}<title>${esc(a)}</title></text>`;
+  });
+  cos.forEach((c, j) => {
+    const n = reach[c], cy = y(j, cos.length);
+    s += `<circle cx="${RX}" cy="${cy}" r="4" fill="${sus[c] ? "#ffb020" : "#ff4d3d"}"/>
+      <text x="${RX + 10}" y="${cy + 4.5}" fill="#eceae4" font-size="12.5">${esc(short(c, 20))}<tspan fill="#8b8f9a"> · ${n} app${n > 1 ? "s" : ""}</tspan><title>${esc(c)}</title></text>`;
+  });
+  render($("#web"), s + `</svg>`);
+}
+
+// ---------- data ----------
+
+async function refreshState() {
+  const mine = stateSeq.next();
+  const st = await getJSON(`/api/state?session=${encodeURIComponent(chosen)}`);
+  if (!stateSeq.is(mine)) return;   // a newer request (session switch, button click) superseded this one
+  clockSkew = st.server_ts - Date.now() / 1000;
+  setShield(st.shield === "on");
+  if (document.activeElement !== $("#app") && st.selected_app) $("#app").value = st.selected_app;
+  renderSessions(st); renderReceipt(st); renderStatus(st); renderFeed(st);
+  const sus = st.receipt.find(g => g.category === "Suspected");
+  caughtHere = new Set(sus ? sus.companies.map(c => c.company) : []);
+  renderStats(st, flags.filter(f => caughtHere.has(f.domain) && f.status !== "dismissed").length);
+  renderFlags();
+}
+
 async function refreshSlow() {
   const [f, web] = await Promise.all([getJSON("/api/flags"), getJSON("/api/web")]);
   flags = f;
-  if (lastState) renderCatch(lastState);
+  renderFlags();
   renderWeb(web);
 }
 
-const fast = poll(refresh, 2000);
-poll(refreshSlow, 5000);
-async function act(path, body) { try { await postJSON(path, body); } catch (e) { console.warn(e); } fast.now(); }
-$("#shield").onclick = () => act("/api/shield", {state: $("#shield").classList.contains("on") ? "off" : "on"});
-$("#start").onclick = () => { const app = $("#app").value.trim(); if (app) act("/api/session/start", {app}); else $("#app").focus(); };
+const fast = poll(refreshState, 1500);
+const slow = poll(refreshSlow, 4000);
+setInterval(tickClock, 1000);
+
+/** POST, then refresh right away. Bumping the sequence first drops any response already in flight. */
+async function act(path, body) {
+  stateSeq.next();
+  try { await postJSON(path, body); } catch (e) { console.warn(e); }
+  fast.now(); slow.now();
+}
+
+function choose(v) {
+  chosen = v;
+  const u = new URL(location.href);
+  if (v === "current") u.searchParams.delete("session"); else u.searchParams.set("session", v);
+  history.replaceState(null, "", u);
+}
+
+// ---------- events ----------
+
+$("#session").onchange = e => { choose(e.target.value); fast.now(); };
+
+$("#new-session").onsubmit = e => {
+  e.preventDefault();
+  const input = $("#app"), app = input.value.trim();
+  if (!app) {   // an unnamed session shows up as "unknown" everywhere; ask for the name instead
+    input.classList.remove("invalid"); void input.offsetWidth; input.classList.add("invalid");
+    input.focus();
+    return;
+  }
+  choose("current");   // jump to the session we just started
+  act("/api/session/start", {app});
+};
+$("#app").oninput = () => $("#app").classList.remove("invalid");
+$("#app").onchange = () => act("/api/app", {app: $("#app").value});   // remembered for the box's Start button
 $("#end").onclick = () => act("/api/session/end");
+
+$("#shield").onclick = () => {
+  const on = $("#shield").getAttribute("aria-checked") !== "true";
+  setShield(on);   // flip at once; the next poll confirms
+  act("/api/shield", {state: on ? "on" : "off"});
+};
+
+// One delegated listener: flag cards are re-rendered, the listener is not.
+$("#flags").onclick = e => {
+  const b = e.target.closest("button[data-flag]");
+  if (!b) return;
+  const f = flags.find(x => x.domain === b.dataset.flag);
+  if (f) { f.status = b.dataset.status; renderFlags(); }
+  act("/api/flag", {domain: b.dataset.flag, status: b.dataset.status});
+};
+
+$("#print").onclick = () => window.print();
