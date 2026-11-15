@@ -51,9 +51,23 @@ sudo pip install --break-system-packages -r requirements.txt
 sudo deploy/start_box.sh          # hotspot, DNS, dashboard, both detectors; also at every boot
 ```
 
+**Or with Docker on the Uno Q:** the five services run as containers from one arm64 image,
+while the hotspot and firewall stay on the host. Build on a laptop, copy, then on the board:
+
+```bash
+docker buildx build --platform linux/arm64 -f docker/Dockerfile -t digin:latest --load .   # laptop
+docker save digin:latest | gzip -1 > digin-arm64.tar.gz                                     # laptop
+docker load < ~/digin-arm64.tar.gz && sudo apt-get install -y iw                            # board
+sudo deploy/start_box_docker.sh                                                              # board
+```
+
+Full steps and troubleshooting: [`docker/README.md`](docker/README.md). Use one path or the
+other: `start_box_docker.sh` disables the systemd services so only one copy owns ports 53 and 80.
+
 Then on a phone: mobile data off, join **DigIn** (password `digin1234`), open
 **http://10.42.0.1**, type the app name, press **Start**, use the app, press **End**.
-Health: `http://10.42.0.1/health`. Undo: `sudo deploy/fallback_dnsmasq.sh`.
+The previous dashboard layout is still at `/static/old.html`, and the Shield before/after page
+is at `/story`. Health: `http://10.42.0.1/health`. Undo: `sudo deploy/fallback_dnsmasq.sh`.
 
 **On a laptop** (no hotspot; uses a recorded database):
 
@@ -79,6 +93,7 @@ live: `python3 -m ml.demo set InMobi`, then `status`, then `clear`.
 | `ml_eval/` | held-out evaluation by company, importers for PCAPdroid and box captures |
 | `box/` | hotspot, firewall, flow capture |
 | `deploy/` | systemd services, one-command start, board setup guide |
+| `docker/` | arm64 image, compose file and its own README |
 | `db/` | the shared `digin.db` schema |
 | `data/` | tracker lists, recorded sessions and captures used for training |
 | `docs/` | model details and numbers, original team brief |

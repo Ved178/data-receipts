@@ -7,3 +7,7 @@ __pycache__/
 .venv/
 ml/models/*
 !ml/models/model_ml-v1.*
+*.swp
+
+# docker image export (docker/README.md)
+*.tar.gz
