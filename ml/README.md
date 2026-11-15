@@ -26,7 +26,8 @@ python3 -m ml.cname --db /home/arduino/digin/digin.db --loop 3     # cut-line ru
 python3 -m ml.demo --db ... set InMobi | status | watch | clear    # demo mode
 python3 -m ml_eval.import_pcapdroid data/pcapdroid/*.csv --out data/sessions/pcapdroid.db
 python3 -m ml_eval.evaluate --db data/sessions/pcapdroid.db --holdout InMobi --holdout Vungle --folds
-python3 -m ml.asn build ip2asn-v4.tsv.gz                             # rebuild ad-network IP ranges
+python3 -m ml.asn ip 103.251.108.10                                  # which source + owner
+python3 -m ml.asn build ip2asn-v4.tsv.gz                             # rebuild TSV fallback
 python3 -m unittest discover tests -v
 ```
 
@@ -38,8 +39,11 @@ overwrite a model row or a dismissed/allowlisted one.
 |---|---|
 | `services.json` | Disconnect tracking-protection list |
 | `android-tds.json` | DuckDuckGo Tracker Radar (Android build): trackers, owners, 788 known CNAME cloaks |
+| `ml/data/GeoLite2-ASN.mmdb` | Ved's GeoLite2 download (gitignored: copy onto the box). Preferred when present; IPv4 + IPv6, read by stdlib `ml/mmdb.py` |
 | `ad_asn_ranges.tsv` | iptoasn.com ip2asn-v4, filtered to 20 ad/analytics ASNs (`ml/asn.py: AD_ASNS`) |
 | `apps.json` | app → own company/domains (**best guesses, confirm from captures**) |
 
-Known gaps: IPv6 answers get no ASN owner yet; Vungle/Mintegral/Unity have no own ASN in
+Rule-flag service: `deploy/digin-rules.service` (install steps at the top of the file).
+
+Known gaps: without the GeoLite2 file, IPv6 answers get no ASN owner; Vungle/Mintegral/Unity have no own ASN in
 the data (they sit on clouds), so for them only CNAME + behavior can help.

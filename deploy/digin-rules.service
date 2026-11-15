@@ -1,0 +1,21 @@
+# Cut-line rule flags (CNAME to tracker, ad-network servers) -> ml_flags every 3 s.
+# Owner: Samarth (ml/cname.py). Aarav: start_box.sh can enable it next to digin-dns.
+#   sudo cp deploy/digin-rules.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now digin-rules
+#   journalctl -u digin-rules -f
+# Safe to run next to ml/score.py: rule rows never overwrite model rows, never auto-block.
+[Unit]
+Description=Data Receipt rule flags (CNAME uncloaking + ad-network IPs)
+After=network.target
+
+[Service]
+Type=simple
+User=arduino
+WorkingDirectory=/home/arduino/digin/madhacks26
+ExecStart=/usr/bin/python3 -m ml.cname --db /home/arduino/digin/digin.db --loop 3
+Restart=always
+RestartSec=1
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

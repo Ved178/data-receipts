@@ -83,6 +83,31 @@ class TestLists(unittest.TestCase):
         self.assertIs(lists.load(["InMobi"]), lists.load(["InMobi"]))
 
 
+class TestAsn(unittest.TestCase):
+    def test_tsv_fallback(self):
+        from ml.asn import AsnDB
+        db = AsnDB(mmdb_path="/nonexistent.mmdb")
+        self.assertEqual(db.source, "ad_asn_ranges.tsv")
+        self.assertEqual(db.lookup(INMOBI_IP)[1], "InMobi")
+        self.assertIsNone(db.lookup("8.8.8.8"))
+        self.assertIsNone(db.lookup("2001:4860:4860::8888"))
+
+    @unittest.skipUnless(os.path.exists(os.path.join(ROOT, "ml", "data", "GeoLite2-ASN.mmdb")),
+                         "GeoLite2-ASN.mmdb not present (gitignored; copy from Ved's branch)")
+    def test_geolite(self):
+        from ml.asn import AsnDB
+        db = AsnDB()
+        self.assertEqual(db.source, "GeoLite2-ASN.mmdb")
+        self.assertEqual(db.asn_of("8.8.8.8")[0], 15169)
+        self.assertEqual(db.asn_of("2001:4860:4860::8888")[0], 15169)   # IPv6 works
+        self.assertEqual(db.lookup(INMOBI_IP)[1], "InMobi")
+        self.assertEqual(db.lookup(CRITEO_IP)[1], "Criteo")
+        self.assertIsNone(db.lookup("8.8.8.8"))                         # Google is not "ad network"
+        self.assertIsNone(db.lookup("10.42.0.1"))
+        E = AsnDB(drop_company=lambda co: "inmobi" in co.lower())
+        self.assertIsNone(E.lookup(INMOBI_IP))
+
+
 class TestCname(unittest.TestCase):
     def test_uncloak(self):
         L = lists.load()
@@ -112,6 +137,11 @@ class TestCname(unittest.TestCase):
             cname.write_flags(conn, flags)
             row = conn.execute("SELECT model_version FROM ml_flags WHERE domain='px.newadco.io'").fetchone()
             self.assertEqual(row[0], "m1")
+            # a human-approved/dismissed row is never touched
+            conn.execute("UPDATE ml_flags SET status='approved', model_version='rules-v1' WHERE domain='px.newadco.io'")
+            conn.commit()
+            cname.write_flags(conn, flags)
+            self.assertEqual(conn.execute("SELECT status FROM ml_flags WHERE domain='px.newadco.io'").fetchone()[0], "approved")
             row = conn.execute("SELECT status, model_version FROM ml_flags WHERE domain='metrics.someapp.com'").fetchone()
             self.assertEqual(row, ("suspected", "rules-v1"))
             for (s,) in conn.execute("SELECT score FROM ml_flags"):
