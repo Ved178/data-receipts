@@ -6,6 +6,27 @@ const ESC = {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
 export const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ESC[c]);
 export const short = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
 
+/** Registrable name, same rule as company.base(): ntusus.bidease.com -> bidease.com, a.b.co.uk -> b.co.uk. */
+export function baseDomain(name) {
+  const p = String(name).toLowerCase().replace(/^\.+|\.+$/g, "").split(".");
+  const n = p.length >= 3 && ["co", "com", "net", "org", "gov", "ac", "edu"].includes(p[p.length - 2]) && p[p.length - 1].length === 2 ? 3 : 2;
+  return p.slice(-n).join(".");
+}
+
+/** Axis tick step (seconds) that gives at most `max` ticks over `span` seconds. */
+export function tickStep(span, max = 8) {
+  const nice = [5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400];
+  return nice.find(n => span / n <= max) || nice[nice.length - 1];
+}
+
+/** Axis label for a time offset: 30s, 1m30, 5m, 1h, 1h30. */
+export function fmtTick(sec) {
+  if (sec < 60) return sec + "s";
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  if (h) return h + "h" + (m ? String(m).padStart(2, "0") : "");
+  return m + "m" + (s ? String(s).padStart(2, "0") : "");
+}
+
 export function fmtDur(s) {
   if (s == null) return "-";
   s = Math.max(0, Math.round(s));
