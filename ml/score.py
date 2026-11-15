@@ -7,7 +7,8 @@ Rules (CLAUDE.md §7 / handoff §5):
   * only domains NOT on any list and not allowlisted are scored (Shield owns the rest);
   * new rows are 'suspected'; 'auto_blocked' is OFF unless --auto-block, and then only if score >= AUTO_BLOCK_THRESHOLD, the
     domain is not the current session app's own company, and it is not allowlisted;
-  * never touch a row a human set to dismissed/allowlisted; model rows replace rules-v1 rows;
+  * never touch a row a human set to dismissed/allowlisted, nor a row from another model_version
+    (rules-v1 runs side by side);
   * survives a locked DB (retry with backoff) and a missing model (log and keep looping).
 """
 import argparse
@@ -97,6 +98,8 @@ def write_flags(conn, L, scored, version, threshold=FLAG_THRESHOLD,
                                (dom,)).fetchone()
             if row and row[0] in ("dismissed", "allowlisted"):
                 continue
+            if row and row[1] != version:
+                continue  # never overwrite another model's row (rules-v1 runs side by side)
             det = reasons_mod.details(conn, L, dom)
             why = reasons_mod.dumps(reasons_mod.explain(dom, f, det))
             auto = auto_threshold is not None and score >= auto_threshold and not L.same_company(dom, app) \
