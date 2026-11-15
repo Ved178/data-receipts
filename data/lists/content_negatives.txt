@@ -1,0 +1,14 @@
+# Hand-confirmed content domains (NOT trackers): app APIs, game backends, CDNs.
+# Used as negatives by ml_eval/evaluate.py and should be used by ml/train.py.
+# Add a line only after checking what the domain is. Suffix match: "sybo.com" covers its subdomains.
+# Get candidates from real data:  python3 -m ml_eval.evaluate --db <db> --suggest-negatives
+hungrystudio.com
+sybo.com
+kiloo.com
+tiktokv.com
+cdninstagram.com
+fbcdn.net
+wikipedia.org
+wikimedia.org
+github.com
+githubusercontent.com
