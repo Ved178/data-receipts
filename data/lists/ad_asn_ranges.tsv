@@ -1,0 +1,106 @@
+# start	end	asn	company	category  (built from iptoasn.com ip2asn-v4)
+8.28.7.0	8.28.7.255	62713	PubMatic	Advertising
+8.36.162.0	8.36.162.255	27381	Index Exchange	Advertising
+23.19.48.0	23.19.51.255	205184	Adjust (AppLovin)	Analytics
+23.90.68.0	23.90.68.255	27381	Index Exchange	Advertising
+37.157.0.0	37.157.2.255	198622	Adform	Advertising
+37.157.3.0	37.157.4.255	198622	Adform	Advertising
+37.157.5.0	37.157.7.255	198622	Adform	Advertising
+37.252.160.0	37.252.161.255	29990	Xandr (AppNexus)	Advertising
+37.252.168.0	37.252.175.255	29990	Xandr (AppNexus)	Advertising
+43.250.0.0	43.250.3.255	29990	Xandr (AppNexus)	Advertising
+46.228.160.0	46.228.164.255	56396	Nexxen (Amobee)	Advertising
+46.228.165.0	46.228.171.255	56396	Nexxen (Amobee)	Advertising
+46.228.172.0	46.228.175.255	56396	Nexxen (Amobee)	Advertising
+50.31.142.0	50.31.142.255	22075	Outbrain	Advertising
+64.74.236.0	64.74.236.255	22075	Outbrain	Advertising
+64.202.112.0	64.202.112.255	22075	Outbrain	Advertising
+64.208.136.0	64.208.139.255	29990	Xandr (AppNexus)	Advertising
+64.208.141.0	64.208.141.255	29990	Xandr (AppNexus)	Advertising
+64.210.56.0	64.210.63.255	29990	Xandr (AppNexus)	Advertising
+67.199.150.0	67.199.150.255	62713	PubMatic	Advertising
+68.67.128.0	68.67.129.255	29990	Xandr (AppNexus)	Advertising
+68.67.130.0	68.67.161.255	29990	Xandr (AppNexus)	Advertising
+68.67.162.0	68.67.177.255	29990	Xandr (AppNexus)	Advertising
+68.67.178.0	68.67.183.255	29990	Xandr (AppNexus)	Advertising
+68.67.184.0	68.67.186.255	29990	Xandr (AppNexus)	Advertising
+68.67.187.0	68.67.191.255	29990	Xandr (AppNexus)	Advertising
+69.173.144.0	69.173.147.255	26667	Magnite (Rubicon Project)	Advertising
+69.173.152.0	69.173.153.255	26667	Magnite (Rubicon Project)	Advertising
+69.173.156.0	69.173.158.255	26667	Magnite (Rubicon Project)	Advertising
+70.42.32.0	70.42.32.255	22075	Outbrain	Advertising
+74.119.117.0	74.119.118.255	19750	Criteo	Advertising
+75.119.185.0	75.119.185.255	27381	Index Exchange	Advertising
+85.91.44.0	85.91.47.255	27381	Index Exchange	Advertising
+86.48.44.0	86.48.47.255	396535	Adjust (AppLovin)	Analytics
+89.117.184.0	89.117.184.255	198622	Adform	Advertising
+91.199.242.0	91.199.242.255	44788	Criteo	Advertising
+91.212.98.0	91.212.98.255	44788	Criteo	Advertising
+91.228.72.0	91.228.72.255	27281	Quantcast	Advertising
+91.228.74.0	91.228.74.255	27281	Quantcast	Advertising
+103.43.88.0	103.43.91.255	29990	Xandr (AppNexus)	Advertising
+103.55.112.0	103.55.112.255	27381	Index Exchange	Advertising
+103.104.50.0	103.104.50.255	27381	Index Exchange	Advertising
+103.229.11.0	103.229.11.255	27281	Quantcast	Advertising
+103.231.98.0	103.231.99.255	62713	PubMatic	Advertising
+103.243.220.0	103.243.221.255	29990	Xandr (AppNexus)	Advertising
+103.243.223.0	103.243.223.255	29990	Xandr (AppNexus)	Advertising
+103.251.108.0	103.251.108.255	133025	InMobi	Advertising
+104.36.112.0	104.36.115.255	62713	PubMatic	Advertising
+104.254.148.0	104.254.151.255	29990	Xandr (AppNexus)	Advertising
+110.44.7.0	110.44.7.255	27381	Index Exchange	Advertising
+139.5.84.0	139.5.87.255	27381	Index Exchange	Advertising
+141.226.124.0	141.226.124.255	200478	Taboola	Advertising
+141.226.125.0	141.226.126.255	206614	Taboola	Advertising
+141.226.127.0	141.226.127.255	200478	Taboola	Advertising
+141.226.128.0	141.226.131.255	206614	Taboola	Advertising
+141.226.224.0	141.226.224.255	200478	Taboola	Advertising
+141.226.226.0	141.226.230.255	200478	Taboola	Advertising
+155.94.127.0	155.94.127.255	394600	AppLovin	Advertising
+161.108.224.0	161.108.225.255	26459	The Trade Desk	Advertising
+161.108.227.0	161.108.231.255	26459	The Trade Desk	Advertising
+162.248.16.0	162.248.19.255	62713	PubMatic	Advertising
+162.250.112.0	162.250.115.255	62713	PubMatic	Advertising
+170.76.128.0	170.76.129.255	27381	Index Exchange	Advertising
+172.83.92.0	172.83.92.255	29990	Xandr (AppNexus)	Advertising
+173.208.60.0	173.208.61.255	396535	Adjust (AppLovin)	Analytics
+178.250.1.0	178.250.1.255	44788	Criteo	Advertising
+178.250.7.0	178.250.7.255	44788	Criteo	Advertising
+182.161.72.0	182.161.75.255	55569	Criteo	Advertising
+185.33.99.0	185.33.99.255	204032	Unity Ads	Advertising
+185.64.188.0	185.64.191.255	62713	PubMatic	Advertising
+185.80.36.0	185.80.39.255	27381	Index Exchange	Advertising
+185.84.62.0	185.84.63.255	198622	Adform	Advertising
+185.84.200.0	185.84.201.255	205184	Adjust (AppLovin)	Analytics
+185.106.32.0	185.106.33.255	200478	Taboola	Advertising
+185.129.40.0	185.129.43.255	205184	Adjust (AppLovin)	Analytics
+185.151.204.0	185.151.204.255	205184	Adjust (AppLovin)	Analytics
+185.151.205.0	185.151.207.255	61273	Adjust (AppLovin)	Analytics
+185.167.164.0	185.167.167.255	198622	Adform	Advertising
+185.170.60.0	185.170.63.255	27381	Index Exchange	Advertising
+185.230.36.0	185.230.38.255	205184	Adjust (AppLovin)	Analytics
+185.230.39.0	185.230.39.255	61273	Adjust (AppLovin)	Analytics
+185.235.84.0	185.235.85.255	44788	Criteo	Advertising
+185.255.24.0	185.255.27.255	61273	Adjust (AppLovin)	Analytics
+191.215.64.0	191.215.95.255	26667	Magnite (Rubicon Project)	Advertising
+192.40.32.0	192.40.39.255	27381	Index Exchange	Advertising
+192.82.210.0	192.82.211.255	22075	Outbrain	Advertising
+192.82.242.0	192.82.243.255	62713	PubMatic	Advertising
+192.139.80.0	192.139.80.255	27381	Index Exchange	Advertising
+192.184.67.0	192.184.77.255	27281	Quantcast	Advertising
+192.190.7.0	192.190.7.255	29990	Xandr (AppNexus)	Advertising
+192.208.200.0	192.208.203.255	56396	Nexxen (Amobee)	Advertising
+198.47.127.0	198.47.127.255	62713	PubMatic	Advertising
+199.204.168.0	199.204.168.255	19750	Criteo	Advertising
+199.204.171.0	199.204.171.255	19750	Criteo	Advertising
+199.250.161.0	199.250.164.255	26459	The Trade Desk	Advertising
+199.250.167.0	199.250.175.255	26459	The Trade Desk	Advertising
+204.13.192.0	204.13.193.255	29990	Xandr (AppNexus)	Advertising
+204.13.194.0	204.13.199.255	29990	Xandr (AppNexus)	Advertising
+204.237.133.0	204.237.133.255	62713	PubMatic	Advertising
+207.65.32.0	207.65.39.255	62713	PubMatic	Advertising
+209.204.224.0	209.204.239.255	27381	Index Exchange	Advertising
+213.252.255.0	213.252.255.255	198622	Adform	Advertising
+216.19.192.0	216.19.223.255	26667	Magnite (Rubicon Project)	Advertising
+216.109.160.0	216.109.175.255	26667	Magnite (Rubicon Project)	Advertising
+216.252.164.0	216.252.166.255	29990	Xandr (AppNexus)	Advertising

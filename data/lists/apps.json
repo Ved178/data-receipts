@@ -1,0 +1,8 @@
+{
+  "_note": "App name (as picked on the dashboard) -> its own company and domains. Shield and auto-block never touch these. Domains are best guesses: confirm from a real capture and edit.",
+  "Block Blast": {"company": "Hungry Studio", "domains": ["hungrystudio.com", "hungrystudio.net"]},
+  "Subway Surfers": {"company": "SYBO", "domains": ["sybo.com", "kiloo.com", "subwaysurfers.com"]},
+  "TikTok": {"company": "ByteDance", "domains": ["tiktok.com", "tiktokv.com", "tiktokcdn.com", "byteoversea.com", "ibytedtos.com"]},
+  "Instagram": {"company": "Meta", "domains": ["instagram.com", "cdninstagram.com", "facebook.com", "fbcdn.net"]},
+  "YouTube": {"company": "Google", "domains": ["youtube.com", "googlevideo.com", "ytimg.com"]}
+}
