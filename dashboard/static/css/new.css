@@ -1,0 +1,34 @@
+/* /static/new.html: additions on top of app.css (the old dashboard's styles, unchanged). */
+.tagline{padding:10px var(--gutter) 0;font-size:16px;color:var(--text)}
+.t-green{color:var(--green);font-weight:700} .t-amber{color:var(--amber);font-weight:700}
+.stepn{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;margin-right:8px;
+  background:var(--raised);border:1px solid var(--line);color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:0}
+.step-label{display:inline-flex;align-items:center;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.receipt-wrap .step-label{margin-bottom:12px}
+.blockbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);
+  border-radius:14px;padding:10px 16px}
+.blockbar .keeps{color:var(--green);font-weight:700;font-size:14px}
+.why-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.why-cols div{background:var(--raised);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.why-cols b{display:block;margin-bottom:4px} .why-cols p{margin:0;color:var(--mute);font-size:13px}
+.why-cols .us{border-color:var(--green)} .why-cols .us b{color:var(--green)} .why-cols .us p{color:var(--text)}
+/* pulsing LIVE dot while a session runs */
+.status.live:before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--red);
+  margin-right:8px;vertical-align:1px;animation:livepulse 1.6s infinite}
+@keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(255,77,61,.7)}70%{box-shadow:0 0 0 9px rgba(255,77,61,0)}100%{box-shadow:0 0 0 0 rgba(255,77,61,0)}}
+.foot{padding:4px var(--gutter) 24px;color:var(--dim);font-size:13px}
+
+/* Phone: one column in this order: counters, Shield, receipt, caught trackers, VPN card. */
+@media (max-width:700px){
+  html,body{overflow-x:hidden}
+  .dash{display:flex;flex-direction:column;gap:16px}
+  .col.right{display:contents}
+  .stats{order:1} .blockbar{order:2} .receipt-wrap{order:3} .catch{order:4} .why{order:5}
+  .split{display:none}                       /* Tracker Web + live lookups hidden on phone */
+  .why-cols{grid-template-columns:1fr}
+  .blockbar{padding:14px 16px}
+  .switch{min-height:48px;padding:10px 18px 10px 12px;font-size:15px}
+  button,select,input{min-height:44px}
+  .tagline{font-size:15px}
+  .receipt-wrap{min-width:0;width:100%}
+}

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DigIn · Data Receipt</title>
+<link rel="stylesheet" href="/static/css/app.css">
+<link rel="stylesheet" href="/static/css/new.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/">DATA&nbsp;RECEIPT<small>on-device tracker detection · no cloud</small></a>
+  <nav class="tabs"><a href="/static/new.html" class="active">Live receipt</a><a href="/story">Shield story</a></nav>
+  <div class="topbar-right">
+    <span class="conn" id="conn"><i></i><span>Connecting…</span></span>
+  </div>
+</header>
+<div class="tagline">See every company your apps share your data with. <span class="t-green">Block them.</span> <span class="t-amber">Catch the hidden ones.</span></div>
+
+<div class="sessionbar">
+  <label class="field"><span>Showing</span><select id="session" title="Which session to show"></select></label>
+  <form class="field" id="new-session">
+    <span>New session</span>
+    <input id="app" placeholder="App name, e.g. Block Blast" list="apps" autocomplete="off" maxlength="60">
+    <datalist id="apps"><option>Block Blast</option><option>Subway Surfers</option><option>Instagram</option><option>TikTok</option></datalist>
+    <button class="primary" type="submit">Start</button>
+    <button type="button" id="end" disabled>End</button>
+  </form>
+  <span class="status" id="status"></span>
+</div>
+
+<main>
+  <div class="dash">
+    <section class="receipt-wrap">
+      <div class="step-label"><span class="stepn">1</span>See · this app's receipt</div>
+      <div class="paper receipt" id="receipt"></div>
+      <div class="receipt-actions noprint"><button id="print">Print / save receipt</button></div>
+    </section>
+
+    <section class="col right">
+      <div class="stats" id="stats"></div>
+
+      <div class="blockbar">
+        <span class="step-label"><span class="stepn">2</span>Block</span>
+        <button id="shield" class="switch" role="switch" aria-checked="false"><span class="track"></span><span id="shield-label">Shield off</span></button>
+        <span class="keeps">Your app keeps working.</span>
+      </div>
+
+      <div class="panel catch">
+        <div class="panel-head"><h2><span class="stepn">3</span>Catch · hidden trackers</h2><span class="hint">Not on our blocklists. Flagged by our detector and model from how they behave.</span></div>
+        <div id="flags"></div>
+      </div>
+
+      <div class="panel why">
+        <div class="panel-head"><h2>Why this isn't a VPN or ad blocker</h2></div>
+        <div class="why-cols">
+          <div><b>VPN</b><p>Hides your traffic from your Wi-Fi, but apps still send your data to the same companies.</p></div>
+          <div><b>List-based blockers</b><p>Block known domains, miss ones not on a list.</p></div>
+          <div class="us"><b>DigIn</b><p>Shows each app's receipt, blocks them, and flags unknown trackers by behaviour. On-device, no cloud.</p></div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="panel">
+          <div class="panel-head"><h2>Tracker web</h2><span class="hint">The same tracking companies inside different apps</span></div>
+          <div class="web" id="web"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Live lookups</h2>
+            <span class="key"><span><i style="background:var(--red)"></i>tracker</span><span><i style="background:var(--green)"></i>blocked</span></span></div>
+          <div class="feed" id="feed"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="foot">We see who your apps contact, never what they send. Everything stays on this box.</footer>
+<script type="module" src="/static/js/new.js"></script>
+</body>
+</html>
