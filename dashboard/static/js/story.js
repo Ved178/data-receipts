@@ -1,5 +1,5 @@
 // Shield story (/story): before/after slips for one app, and the whack-a-mole timeline of one session.
-import {$, esc, short, fmtDur, render, getJSON, poll, sequence} from "./lib.js";
+import {$, esc, short, fmtDur, fmtTick, tickStep, baseDomain, render, getJSON, poll, sequence} from "./lib.js";
 import {REVIEW} from "./review.js";
 
 const params = new URLSearchParams(location.search);
@@ -66,6 +66,13 @@ function renderTimeline(t) {
   const cos = t.companies;
   if (!cos.length) { render($("#tl"), `<div class="empty">No tracking companies in this session.</div>`); return; }
 
+  // A caught tracker is a raw lookup name (api16-access-ttp.tiktokpangle.us): show its registrable
+  // name (tiktokpangle.us), full name on hover. Two caught names under one base keep their full names.
+  const baseCount = {};
+  for (const c of cos) if (c.category === "Suspected") baseCount[baseDomain(c.company)] = (baseCount[baseDomain(c.company)] || 0) + 1;
+  const label = c => c.category === "Suspected" && baseCount[baseDomain(c.company)] === 1 ? baseDomain(c.company) : c.company;
+  const labelOf = Object.fromEntries(cos.map(c => [c.company, label(c)]));
+
   // Labels on top: first block + network switches (merged when < 5 s apart), stacked so they never overlap.
   const labels = [];
   if (t.first_block) labels.push({t: t.first_block.t, text: `Shield blocks ${short(t.first_block.company, 22)}`, color: "#33d17a", dash: "3 5", w: 2.5});
@@ -74,10 +81,17 @@ function renderTimeline(t) {
     const m = merged[merged.length - 1];
     if (m && sw.t - m.t < 5) m.names.push(sw.company); else merged.push({t: sw.t, names: [sw.company]});
   }
-  for (const m of merged) labels.push({t: m.t, text: "→ " + m.names.map(n => short(n, 22)).join(" + "), color: "#ffb020", dash: "6 5", w: 3, bold: true});
+  for (const m of merged) {   // at most two names per label, the rest as a count: the rows below name them all
+    const names = m.names.map(n => short(labelOf[n] || n, 22));
+    const text = "→ " + names.slice(0, 2).join(" + ") + (names.length > 2 ? ` + ${names.length - 2} more` : "");
+    labels.push({t: m.t, text, color: "#ffb020", dash: "6 5", w: 3, bold: true});
+  }
 
   const L = 330, W = 1500, R = 30, rowH = 36, charW = 10.5;
-  const span = Math.max(t.duration_s, 10), x = sec => L + (W - L - R) * Math.min(Math.max(sec, 0), span) / span;
+  // A session left running for hours would squeeze every mark into the first pixels: while it is
+  // live, the axis ends shortly after the last tracker lookup instead of "now".
+  const lastT = Math.max(0, ...cos.flatMap(c => c.events.map(e => e[0])));
+  const span = Math.max(s.end_ts ? t.duration_s : Math.min(t.duration_s, lastT * 1.1 + 5), 10), x = sec => L + (W - L - R) * Math.min(Math.max(sec, 0), span) / span;
   labels.sort((a, b) => a.t - b.t);
   const ends = [];   // right edge of the last label on each stacking level
   for (const lb of labels) {
@@ -93,11 +107,10 @@ function renderTimeline(t) {
   cos.forEach((c, i) => {   // row stripes first, so guide lines and marks sit on top of them
     if (i % 2) g += `<rect x="0" y="${top + rowH * i + 2}" width="${W}" height="${rowH - 4}" fill="#1b1e25"/>`;
   });
-  const step = span > 600 ? 120 : span > 240 ? 60 : 30;
+  const step = tickStep(span);
   for (let sec = 0; sec <= span; sec += step) {
-    const lab = sec < 60 ? sec + "s" : Math.floor(sec / 60) + "m" + (sec % 60 ? String(sec % 60).padStart(2, "0") : "");
     g += `<line x1="${x(sec)}" y1="${top - 10}" x2="${x(sec)}" y2="${H - 40}" stroke="#2a2d36" stroke-width="1.5"/>
-          <text x="${x(sec)}" y="${H - 12}" text-anchor="middle" fill="#8b8f9a" font-size="18">${lab}</text>`;
+          <text x="${x(sec)}" y="${H - 12}" text-anchor="middle" fill="#8b8f9a" font-size="18">${fmtTick(sec)}</text>`;
   }
   for (const lb of labels) {
     const lx = x(lb.t), ly = 28 + 26 * lb.lvl;
@@ -107,7 +120,7 @@ function renderTimeline(t) {
   }
   cos.forEach((c, i) => {
     const y = top + rowH * i + rowH / 2, sus = c.category === "Suspected";
-    g += `<text x="${L - 18}" y="${y + 7}" text-anchor="end" fill="${sus ? "#ffb020" : "#eceae4"}" font-size="20" font-weight="${sus ? 800 : 600}">${esc(short(c.company, 26))}<title>${esc(c.company)}</title></text>`;
+    g += `<text x="${L - 18}" y="${y + 7}" text-anchor="end" fill="${sus ? "#ffb020" : "#eceae4"}" font-size="20" font-weight="${sus ? 800 : 600}">${esc(short(labelOf[c.company], 26))}<title>${esc(c.company)}</title></text>`;
     const seen = new Set();   // one mark per ~6 px per status: a burst of lookups is one mark, not a blob
     for (const [sec, st, qname] of c.events) {
       const ex = x(sec), key = st + Math.round(ex / 6);
