@@ -118,10 +118,141 @@ class DashboardTest(unittest.TestCase):
         self.assertTrue(companies, "receipt should name at least one company")
         self.assertIn(s["shield"], ("on", "off"))
 
+    def test_classify_by_function_not_owner(self):
+        # Amazon owns both; its ad servers are Advertising, its shop is not.
+        self.assertEqual(self.app.classify("aax.advertising.a2z.com", {}), ("Amazon", "Advertising"))
+        self.assertEqual(self.app.classify("c.amazon-adsystem.com", {}), ("Amazon", "Advertising"))
+        self.assertEqual(self.app.classify("ad-host-backup-america.oss-us-west-1.aliyuncs.com", {})[1], "Advertising")
+
+    def test_cname_to_cloud_host_is_not_ownership(self):
+        self.assertIsNone(self.app.classify("thinkingdata.cn", {}, '["alb-x.cn-shanghai.alb.aliyuncs.com"]'))
+        self.assertEqual(self.app.classify("dvrtr.innovid.com", {}, '["vast.doubleverify.com"]')[0], "Innovid")
+
+    def test_readable_company_names(self):
+        self.assertEqual(self.app.classify("cdn.jsdelivr.net", {})[0], "jsDelivr (code CDN)")
+
+    def test_background_apps_not_counted(self):
+        import company
+        self.assertEqual(company.background(["gateway.icloud.com"], "Block Blast"), "Apple / iCloud")
+        self.assertEqual(company.background(["g.whatsapp.net"], "Block Blast"), "WhatsApp")
+        self.assertIsNone(company.background(["aws.api.snapchat.com"], "Snapchat"))  # the tested app itself
+        self.assertIsNone(company.background(["ads.vungle.com"], "Block Blast"))
+        conn = sqlite3.connect(self.db)
+        sid = conn.execute("SELECT session_id FROM sessions LIMIT 1").fetchone()[0]
+        conn.execute("INSERT INTO raw_lookups(ts, device, session_id, qname) VALUES (?,?,?,?)",
+                     (time.time(), "10.42.0.9", sid, "g.whatsapp.net"))
+        conn.commit()
+        s = self.app.state(str(sid))
+        self.assertIn("WhatsApp", [b["label"] for b in s["background"]])
+        self.assertNotIn("WhatsApp", [c["company"] for g in s["receipt"] for c in g["companies"]])
+
+    def _shield_sessions(self):
+        conn = sqlite3.connect(self.db)
+        conn.execute("INSERT INTO sessions VALUES (91, '', 'Mole Game', 5000, 5100)")
+        conn.execute("INSERT INTO sessions VALUES (92, '', 'Mole Game', 6000, 6100)")
+        rows = [(91, 5001, "ads.vungle.com", 0), (91, 5002, "api.molegame.com", 0),
+                (92, 6001, "ads.vungle.com", 1), (92, 6002, "api.molegame.com", 0),
+                (92, 6010, "ssp.newadnet.io", 0), (92, 6011, "moloco.rtb.afafb.com", 1)]
+        conn.executemany("INSERT INTO raw_lookups(session_id, ts, device, qname, blocked) VALUES (?,?,'10.42.0.9',?,?)", rows)
+        conn.execute("INSERT INTO ml_flags VALUES ('newadnet.io', 0.7, '[\"x\"]', 'suspected', 'rules-v1', 1, 1)")
+        conn.commit()
+
+    def test_compare_before_after(self):
+        self._shield_sessions()
+        c = self.app.compare("Mole Game")
+        self.assertEqual((c["off"]["session_id"], c["on"]["session_id"]), (91, 92))
+        self.assertEqual(c["on"]["caught"], ["newadnet.io"])
+        self.assertTrue(c["on"]["game_still_worked"])   # own server answered, Shield-only blocks are trackers
+        self.assertGreaterEqual(c["on"]["companies_blocked"], 2)
+
+    def test_timeline_rows_and_switch(self):
+        self._shield_sessions()
+        t = self.app.timeline(92)
+        status = {c["company"]: c["events"][0][1] for c in t["companies"]}
+        self.assertEqual(status["newadnet.io"], "caught")
+        self.assertIn("blocked", status.values())
+        self.assertEqual([s["company"] for s in t["switches"]], ["newadnet.io"])
+
     def test_tracker_web_and_flags_load(self):
         web = self.app.tracker_web()
         self.assertIn("edges", web)
         self.assertIsInstance(self.app.flags_map(self.app.db()), dict)
+
+
+class DetectorTest(unittest.TestCase):
+    """rules-v1: flags only names that are new with Shield ON, after an ad company was blocked."""
+
+    def setUp(self):
+        import detector
+        self.D = detector
+        self.dir = tempfile.mkdtemp()
+        self.db = os.path.join(self.dir, "digin.db")
+        conn = sqlite3.connect(self.db)
+        conn.executescript(open(os.path.join(ROOT, "db", "schema.sql")).read())
+        add = lambda sid, t, q, chain="[]", b=0: conn.execute(  # noqa: E731
+            "INSERT INTO raw_lookups(ts, device, session_id, qname, cname_chain, blocked, block_reason)"
+            " VALUES (?,?,?,?,?,?,?)", (1000 * sid + t, "10.42.0.9", sid, q, chain, b, "list" if b else None))
+        conn.execute("INSERT INTO sessions VALUES (1, '', 'Test Game', 1000, 1100)")   # Shield OFF
+        conn.execute("INSERT INTO sessions VALUES (2, '', 'Test Game', 2000, 2100)")   # Shield ON
+        add(1, 1, "api.testgame.com")
+        add(1, 2, "ads.vungle.com")
+        add(1, 3, "old-adnet.example")                      # seen with Shield OFF -> never new
+        add(2, 1, "early-thing.example")                    # before the first block -> not judged
+        add(2, 2, "ads.vungle.com", b=1)                    # Shield blocks an ad company
+        add(2, 3, "api.testgame.com")
+        add(2, 4, "old-adnet.example")
+        add(2, 5, "ssp-win.newadnet.io")                    # new + ad words -> flagged
+        add(2, 6, "img.contentthing.org")                   # new, no ad words -> flagged, lower score
+        add(2, 7, "d1234.cloudfront.net")                   # plain CDN -> never
+        add(2, 8, "x.gstatic.com")                          # allowlisted -> never
+        add(2, 9, "gateway.icloud.com")                     # phone background -> never
+        add(2, 10, "doubleclick.net")                       # already on a list -> never (Shield's job)
+        add(2, 11, "trk.cloakhost.net", '["ads.vungle.com"]')  # CNAME to a known tracker -> flagged, high
+        add(2, 12, "kapublicapiprod.azurewebsites.net",        # game's own API on Azure -> never (Knife Hit)
+            '["waws-prod-am2-287.westeurope.cloudapp.azure.com"]')
+        add(2, 13, "sdk.moloco.local")                         # can't reach the internet -> never (Subway Surfers)
+        conn.commit()
+        self.conn = conn
+
+    def tearDown(self):
+        self.conn.close()
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_flags_only_new_after_block(self):
+        flags = {f["domain"]: f for f in self.D.detect(self.conn)}
+        self.assertEqual(set(flags), {"newadnet.io", "contentthing.org", "cloakhost.net"})
+        self.assertGreater(flags["newadnet.io"]["score"], flags["contentthing.org"]["score"])
+        self.assertGreater(flags["cloakhost.net"]["score"], flags["contentthing.org"]["score"])
+        self.assertTrue(any("ssp" in r for r in flags["newadnet.io"]["reasons"]))
+        self.assertTrue(any("Shield-OFF" in r for r in flags["contentthing.org"]["reasons"]))
+        for f in flags.values():
+            self.assertTrue(0 <= f["score"] <= 1)
+
+    def test_no_baseline_no_flags(self):
+        self.conn.execute("DELETE FROM raw_lookups WHERE session_id=1")
+        self.assertEqual(self.D.detect(self.conn), [])
+
+    def test_never_overwrites_other_models_and_keeps_user_choice(self):
+        self.conn.execute("INSERT INTO ml_flags VALUES ('newadnet.io', 0.99, '[\"ved\"]', 'auto_blocked', 'hgb-v2', 1, 1)")
+        self.conn.commit()
+        self.D.write_flags(self.conn, self.D.detect(self.conn))
+        row = self.conn.execute("SELECT score, status, model_version FROM ml_flags WHERE domain='newadnet.io'").fetchone()
+        self.assertEqual(row, (0.99, "auto_blocked", "hgb-v2"))
+        self.conn.execute("UPDATE ml_flags SET status='dismissed' WHERE domain='contentthing.org'")
+        self.conn.commit()
+        self.D.write_flags(self.conn, self.D.detect(self.conn))
+        row = self.conn.execute("SELECT status, model_version FROM ml_flags WHERE domain='contentthing.org'").fetchone()
+        self.assertEqual(row, ("dismissed", "rules-v1"))
+
+    def test_stale_own_suggestions_removed(self):
+        self.conn.execute("INSERT INTO ml_flags VALUES ('azure.com', 0.5, '[]', 'suspected', 'rules-v1', 1, 1)")
+        self.conn.execute("INSERT INTO ml_flags VALUES ('other.io', 0.9, '[]', 'suspected', 'hgb-v2', 1, 1)")
+        self.conn.commit()
+        self.D.write_flags(self.conn, self.D.detect(self.conn))
+        left = {r[0] for r in self.conn.execute("SELECT domain FROM ml_flags")}
+        self.assertNotIn("azure.com", left)          # our stale suggestion: gone
+        self.assertIn("other.io", left)              # another model's row: untouched
+        self.assertIn("newadnet.io", left)
 
 
 class DeployScriptsTest(unittest.TestCase):

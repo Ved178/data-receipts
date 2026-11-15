@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shield Story</title>
+<style>
+  :root{
+    --ink:#0e0f12; --panel:#17191f; --line:#2a2d36; --text:#eceae4; --mute:#8b8f9a;
+    --paper:#f6f2e8; --paperink:#1b1b1b; --red:#ff4d3d; --green:#33d17a; --amber:#ffb020; --grey:#6b7080;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--text);font-family:var(--sans)}
+  header{display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+         padding:20px 32px;border-bottom:1px solid var(--line)}
+  .brand{font-family:var(--mono);font-weight:800;letter-spacing:.18em;font-size:24px}
+  .brand small{display:block;color:var(--mute);letter-spacing:.06em;font-weight:500;font-size:13px;margin-top:4px}
+  .controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  select,a.btn{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;
+         padding:12px 14px;font:inherit;font-size:18px;text-decoration:none}
+  main{padding:28px 32px;display:grid;gap:32px}
+  h2{margin:0 0 16px;font-size:16px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:700}
+  /* before / after: two receipt slips */
+  .ba{display:grid;grid-template-columns:1fr auto 1fr;gap:28px;align-items:stretch}
+  .slip{background:var(--paper);color:var(--paperink);font-family:var(--mono);padding:26px 30px 32px;position:relative;
+        box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  .slip:before,.slip:after{content:"";position:absolute;left:0;right:0;height:12px;
+     background:linear-gradient(-45deg,transparent 8px,var(--paper) 0) 0 0/16px 16px,
+                linear-gradient(45deg,transparent 8px,var(--paper) 0) 0 0/16px 16px}
+  .slip:before{top:-12px;transform:rotate(180deg)} .slip:after{bottom:-12px}
+  .slip .k{font-size:18px;font-weight:800;letter-spacing:.2em}
+  .slip .sub{font-size:15px;color:#555;margin-top:4px}
+  .big{font-size:84px;font-weight:800;line-height:1;margin:18px 0 4px;font-variant-numeric:tabular-nums}
+  .big.red{color:#d0281a} .big.green{color:#0a7d3c} .big.amber{color:#b86e00}
+  .lbl{font-size:20px;font-weight:700}
+  .row{display:flex;gap:10px;font-size:20px;margin-top:10px} .row .dots{flex:1;border-bottom:2px dotted #999;transform:translateY(-6px)}
+  .rule{border-top:2px dashed #555;margin:18px 0}
+  .ok{font-size:24px;font-weight:800;color:#0a7d3c} .bad{font-size:24px;font-weight:800;color:#b3261e}
+  .names{font-size:18px;color:#7a4a00;font-weight:700;margin-top:6px;word-break:break-word}
+  .item{font-size:17px;margin:6px 0 0 22px;line-height:1.35} .item .why{color:#555;font-size:15px}
+  .row.sub2{font-size:19px;margin-left:10px} .amberk{color:#b86e00}
+  .pill{display:inline-block;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:1px 7px;border-radius:5px;color:#fff}
+  .pill.confirmed{background:#0a7d3c} .pill.suspected{background:#b86e00} .pill.missed{background:#b3261e} .pill.unclear{background:#777}
+  .arrow{align-self:center;font-family:var(--mono);font-size:56px;color:var(--mute)}
+  /* timeline */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px 24px}
+  .legend{display:flex;gap:28px;flex-wrap:wrap;font-size:18px;margin:-4px 0 14px;color:var(--text)}
+  .legend span{display:inline-flex;gap:8px;align-items:center}
+  .empty{color:var(--mute);font-size:20px;padding:20px 0}
+  svg text{font-family:var(--sans)}
+  @media (max-width:1100px){.ba{grid-template-columns:1fr}.arrow{display:none}.big{font-size:64px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">SHIELD STORY<small>Data Receipt · what happens when you block the trackers</small></div>
+  <div class="controls">
+    <select id="app" title="App"></select>
+    <select id="session" title="Session for the timeline"></select>
+    <a class="btn" href="/">← Dashboard</a>
+  </div>
+</header>
+<main>
+  <section>
+    <h2 id="ba-title">Shield before / after</h2>
+    <div class="ba" id="ba"><div class="empty">Loading…</div></div>
+  </section>
+  <section class="panel">
+    <h2 id="tl-title">Whack-a-mole · block one ad company, the app reaches for another</h2>
+    <div class="legend">
+      <span><svg width="22" height="22"><path d="M5 5L17 17M17 5L5 17" stroke="#ff4d3d" stroke-width="4"/></svg>blocked by Shield</span>
+      <span><svg width="22" height="22"><circle cx="11" cy="11" r="8" fill="#ffb020"/></svg>caught by our detector</span>
+      <span><svg width="22" height="22"><circle cx="11" cy="11" r="6" fill="#6b7080"/></svg>allowed through</span>
+      <span><svg width="26" height="22"><path d="M13 0V22" stroke="#ffb020" stroke-width="3" stroke-dasharray="5 4"/></svg>game switched networks</span>
+    </div>
+    <div id="tl"><div class="empty">Loading…</div></div>
+  </section>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const short = (s, n) => s.length > n ? s.slice(0, n - 1) + "…" : s;
+// Hand review of the Shield-ON sessions on board #2 (Nov 14-15), read from the box's own log.
+// The detector can't know what it missed; a person checked every unlisted name that got through.
+// verdict: "confirmed" = known ad network; "suspected" = looks like ads, not verified.
+const REVIEW = {
+  "block blast": {
+    caught: {"bidease.com": ["confirmed", "Bidease ad network"],
+             "startappservice.com": ["confirmed", "StartApp ad network"],
+             "startappelb.com": ["confirmed", "StartApp load balancer"],
+             "ibl-video.site": ["suspected", "BIGO IP range, likely BIGO Ads video; not verified"]},
+    missed: [["aarki.net", "Aarki ad network; also used with Shield OFF, so not \"new\""]],
+    unclear: []},
+  "knife hit": {caught: {}, missed: [], unclear: []},
+  "subway surfers": {caught: {}, missed: [],
+    unclear: [["lazybumblebee.com", "unknown; also used with Shield OFF, not judged"]]},
+};
+const params = new URLSearchParams(location.search);
+let sessions = [];
+
+function slip(title, sub, body){ return `<div class="slip"><div class="k">${title}</div><div class="sub">${sub}</div>${body}</div>`; }
+function dur(s){ s = Math.round(s || 0); return `${Math.floor(s/60)}m ${String(s%60).padStart(2,"0")}s`; }
+
+function renderBA(c){
+  $("#ba-title").textContent = `Shield before / after · ${c.app || ""}`;
+  if(!c.off || !c.on){
+    $("#ba").innerHTML = `<div class="empty">Needs one Shield-OFF and one Shield-ON session of the same app.</div>`; return;
+  }
+  const off = c.off, on = c.on;
+  const before = slip("SHIELD OFF", `${c.app} · ${dur(off.duration_s)} · ${off.lookups} lookups`,
+    `<div class="big red">${off.companies_reached}</div><div class="lbl">tracking companies reached the phone</div>
+     <div class="rule"></div>
+     <div class="row"><span>Blocked</span><span class="dots"></span><b>0</b></div>
+     <div class="row"><span>Game's own lookups answered</span><span class="dots"></span><b>${off.game_lookups_ok}</b></div>`);
+  const rv = REVIEW[(c.app || "").trim().toLowerCase()];
+  const caught = on.caught.length, missed = rv ? rv.missed.length : 0;
+  const tag = d => { const v = rv && rv.caught[d]; const verdict = v ? v[0] : "suspected";
+    return `<div class="item"><span class="pill ${verdict}">${verdict}</span> <b>${esc(d)}</b>${v ? ` <span class="why">${esc(v[1])}</span>` : ""}</div>`; };
+  const after = slip("SHIELD ON", `${c.app} · ${dur(on.duration_s)} · ${on.lookups} lookups`,
+    `<div class="big green">${on.companies_blocked}</div><div class="lbl">companies blocked</div>
+     <div class="rule"></div>
+     <div class="row"><span>Tried anyway, not on our blocklists</span><span class="dots"></span><b>${rv ? caught + missed : caught + "+"}</b></div>
+     <div class="row sub2"><span>● caught by our detector</span><span class="dots"></span><b class="amberk">${caught}</b></div>
+     ${on.caught.map(tag).join("")}
+     <div class="row sub2"><span>✗ missed</span><span class="dots"></span><b>${rv ? missed : "?"}</b></div>
+     ${rv ? rv.missed.map(([d, why]) => `<div class="item"><span class="pill missed">missed</span> <b>${esc(d)}</b> <span class="why">${esc(why)}</span></div>`).join("")
+          : `<div class="item why">not reviewed by hand yet</div>`}
+     ${rv && rv.unclear.length ? rv.unclear.map(([d, why]) => `<div class="item"><span class="pill unclear">unclear</span> <b>${esc(d)}</b> <span class="why">${esc(why)}</span></div>`).join("") : ""}
+     ${rv ? `<div class="item why">Misses found by reading the box's log by hand.</div>` : ""}
+     ${on.companies_through.length ? `<div class="row"><span>Listed, got through</span><span class="dots"></span><b>${on.companies_through.length}</b></div>
+        <div class="names" style="color:#555">${on.companies_through.map(esc).join(", ")}</div>` : ""}
+     <div class="rule"></div>
+     ${on.game_still_worked
+       ? `<div class="ok">✓ Game still worked</div><div class="sub">its own servers answered ${on.game_lookups_ok} times, 0 blocked</div>`
+       : `<div class="bad">✗ Shield blocked ${on.game_lookups_blocked} of the game's own lookups</div>`}`);
+  $("#ba").innerHTML = before + `<div class="arrow">→</div>` + after;
+}
+
+function renderTL(t){
+  const s = t.session;
+  $("#tl-title").textContent = `Whack-a-mole · ${s.app_name} · session #${s.session_id} · Shield ${s.shield.toUpperCase()}`;
+  const cos = t.companies;
+  if(!cos.length){ $("#tl").innerHTML = `<div class="empty">No tracking companies in this session.</div>`; return; }
+  // labels on top: first block + network switches (merged when < 5 s apart), stacked so they never overlap
+  const labels = [];
+  if(t.first_block) labels.push({t: t.first_block.t, text: `Shield blocks ${short(t.first_block.company,22)}`, color: "#33d17a", dash: "3 5", w: 2.5});
+  const merged = [];
+  t.switches.forEach(sw => { const m = merged[merged.length-1];
+    if(m && sw.t - m.t < 5) m.names.push(sw.company); else merged.push({t: sw.t, names: [sw.company]}); });
+  merged.forEach(m => labels.push({t: m.t, text: "→ " + m.names.map(n => short(n,22)).join(" + "), color: "#ffb020", dash: "6 5", w: 3, bold: true}));
+  const L = 330, W = 1500, R = 30, rowH = 36, charW = 10.5;
+  const span = Math.max(t.duration_s, 10), x = sec => L + (W - L - R) * Math.min(sec, span) / span;
+  labels.sort((a,b) => a.t - b.t);
+  const ends = [];
+  labels.forEach(lb => { const lx = x(lb.t), len = lb.text.length * charW;
+    lb.anchorEnd = lx + len + 8 > W; const from = lb.anchorEnd ? lx - len - 8 : lx, to = lb.anchorEnd ? lx : lx + len + 8;
+    let lvl = ends.findIndex(e => e < from); if(lvl < 0){ lvl = ends.length; ends.push(0); } ends[lvl] = to; lb.lvl = lvl; });
+  const top = 34 + 26 * Math.max(ends.length, 1) + 12, H = top + rowH * cos.length + 50;
+  let g = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Timeline of tracker lookups">`;
+  const step = span > 240 ? 60 : 30;
+  for(let sec = 0; sec <= span; sec += step){
+    g += `<line x1="${x(sec)}" y1="${top-10}" x2="${x(sec)}" y2="${H-40}" stroke="#2a2d36" stroke-width="1.5"/>
+          <text x="${x(sec)}" y="${H-12}" text-anchor="middle" fill="#8b8f9a" font-size="18">${sec<60?sec+"s":Math.floor(sec/60)+"m"+(sec%60?String(sec%60).padStart(2,"0"):"")}</text>`;
+  }
+  labels.forEach(lb => { const lx = x(lb.t), ly = 28 + 26 * lb.lvl;
+    g += `<line x1="${lx}" y1="${ly+6}" x2="${lx}" y2="${H-40}" stroke="${lb.color}" stroke-width="${lb.w}" stroke-dasharray="${lb.dash}"/>
+          <text x="${lb.anchorEnd ? lx-6 : lx+6}" y="${ly}" fill="${lb.color}" font-size="18" font-weight="${lb.bold?800:700}"
+                text-anchor="${lb.anchorEnd ? "end" : "start"}">${esc(lb.text)}</text>`; });
+  // rows
+  cos.forEach((c, i) => {
+    const y = top + rowH * i + rowH / 2;
+    const sus = c.category === "Suspected";
+    g += `<rect x="0" y="${y - rowH/2 + 2}" width="${W}" height="${rowH - 4}" fill="${i%2?"#15171c":"transparent"}"/>
+          <text x="${L-18}" y="${y+7}" text-anchor="end" fill="${sus?"#ffb020":"#eceae4"}" font-size="20" font-weight="${sus?800:600}">${esc(short(c.company,26))}</text>`;
+    const seen = new Set();
+    c.events.forEach(([sec, st]) => {
+      const key = st + Math.round(x(sec) / 6); if(seen.has(key)) return; seen.add(key);
+      const ex = x(sec);
+      if(st === "blocked") g += `<path d="M${ex-8} ${y-8}L${ex+8} ${y+8}M${ex+8} ${y-8}L${ex-8} ${y+8}" stroke="#ff4d3d" stroke-width="4" stroke-linecap="round"/>`;
+      else if(st === "caught") g += `<circle cx="${ex}" cy="${y}" r="10" fill="#ffb020" stroke="#0e0f12" stroke-width="2"/>`;
+      else g += `<circle cx="${ex}" cy="${y}" r="7" fill="#6b7080"/>`;
+    });
+  });
+  $("#tl").innerHTML = g + `</svg>`;
+}
+
+async function loadCompare(){
+  const app = $("#app").value;
+  const c = await (await fetch(`/api/compare?app=${encodeURIComponent(app)}`)).json();
+  if(!$("#app").options.length){
+    const apps = c.apps_with_both.length ? c.apps_with_both : [c.app].filter(Boolean);
+    $("#app").innerHTML = apps.map(a => `<option>${esc(a)}</option>`).join("");
+    $("#app").value = c.app;
+  }
+  renderBA(c);
+  return c;
+}
+
+async function loadTimeline(id){
+  const t = await (await fetch(`/api/timeline?session=${encodeURIComponent(id)}`)).json();
+  if(!t.error) renderTL(t);
+}
+
+async function init(){
+  sessions = await (await fetch("/api/sessions")).json();
+  $("#app").innerHTML = "";
+  if(params.get("app")) $("#app").innerHTML = `<option>${esc(params.get("app"))}</option>`;
+  const c = await loadCompare();
+  $("#session").innerHTML = sessions.filter(s => s.lookups).map(s =>
+    `<option value="${s.session_id}">#${s.session_id} ${esc(s.app_name)} · Shield ${s.shield.toUpperCase()}</option>`).join("");
+  const pick = params.get("session") || (c.on && c.on.session_id) || (sessions[0] && sessions[0].session_id);
+  if(pick){ $("#session").value = pick; loadTimeline(pick); }
+}
+$("#app").onchange = async () => { const c = await loadCompare(); if(c.on){ $("#session").value = c.on.session_id; loadTimeline(c.on.session_id); } };
+$("#session").onchange = e => loadTimeline(e.target.value);
+init();
+setInterval(() => { loadCompare(); if($("#session").value) loadTimeline($("#session").value); }, 5000);
+</script>
+</body>
+</html>
