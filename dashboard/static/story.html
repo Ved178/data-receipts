@@ -39,6 +39,10 @@
   .rule{border-top:2px dashed #555;margin:18px 0}
   .ok{font-size:24px;font-weight:800;color:#0a7d3c} .bad{font-size:24px;font-weight:800;color:#b3261e}
   .names{font-size:18px;color:#7a4a00;font-weight:700;margin-top:6px;word-break:break-word}
+  .item{font-size:17px;margin:6px 0 0 22px;line-height:1.35} .item .why{color:#555;font-size:15px}
+  .row.sub2{font-size:19px;margin-left:10px} .amberk{color:#b86e00}
+  .pill{display:inline-block;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:1px 7px;border-radius:5px;color:#fff}
+  .pill.confirmed{background:#0a7d3c} .pill.suspected{background:#b86e00} .pill.missed{background:#b3261e} .pill.unclear{background:#777}
   .arrow{align-self:center;font-family:var(--mono);font-size:56px;color:var(--mute)}
   /* timeline */
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px 24px}
@@ -78,6 +82,21 @@
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const short = (s, n) => s.length > n ? s.slice(0, n - 1) + "…" : s;
+// Hand review of the Shield-ON sessions on board #2 (Nov 14-15), read from the box's own log.
+// The detector can't know what it missed; a person checked every unlisted name that got through.
+// verdict: "confirmed" = known ad network; "suspected" = looks like ads, not verified.
+const REVIEW = {
+  "block blast": {
+    caught: {"bidease.com": ["confirmed", "Bidease ad network"],
+             "startappservice.com": ["confirmed", "StartApp ad network"],
+             "startappelb.com": ["confirmed", "StartApp load balancer"],
+             "ibl-video.site": ["suspected", "BIGO IP range, likely BIGO Ads video; not verified"]},
+    missed: [["aarki.net", "Aarki ad network; also used with Shield OFF, so not \"new\""]],
+    unclear: []},
+  "knife hit": {caught: {}, missed: [], unclear: []},
+  "subway surfers": {caught: {}, missed: [],
+    unclear: [["lazybumblebee.com", "unknown; also used with Shield OFF, not judged"]]},
+};
 const params = new URLSearchParams(location.search);
 let sessions = [];
 
@@ -95,12 +114,21 @@ function renderBA(c){
      <div class="rule"></div>
      <div class="row"><span>Blocked</span><span class="dots"></span><b>0</b></div>
      <div class="row"><span>Game's own lookups answered</span><span class="dots"></span><b>${off.game_lookups_ok}</b></div>`);
-  const caught = on.caught.length;
+  const rv = REVIEW[(c.app || "").trim().toLowerCase()];
+  const caught = on.caught.length, missed = rv ? rv.missed.length : 0;
+  const tag = d => { const v = rv && rv.caught[d]; const verdict = v ? v[0] : "suspected";
+    return `<div class="item"><span class="pill ${verdict}">${verdict}</span> <b>${esc(d)}</b>${v ? ` <span class="why">${esc(v[1])}</span>` : ""}</div>`; };
   const after = slip("SHIELD ON", `${c.app} · ${dur(on.duration_s)} · ${on.lookups} lookups`,
     `<div class="big green">${on.companies_blocked}</div><div class="lbl">companies blocked</div>
      <div class="rule"></div>
-     <div class="row"><span>Tried anyway, not on any list</span><span class="dots"></span><b>${caught}</b></div>
-     ${caught ? `<div class="names">caught by our detector: ${on.caught.map(esc).join(", ")}</div>` : ""}
+     <div class="row"><span>Tried anyway, not on any list</span><span class="dots"></span><b>${rv ? caught + missed : caught + "+"}</b></div>
+     <div class="row sub2"><span>● caught by our detector</span><span class="dots"></span><b class="amberk">${caught}</b></div>
+     ${on.caught.map(tag).join("")}
+     <div class="row sub2"><span>✗ missed</span><span class="dots"></span><b>${rv ? missed : "?"}</b></div>
+     ${rv ? rv.missed.map(([d, why]) => `<div class="item"><span class="pill missed">missed</span> <b>${esc(d)}</b> <span class="why">${esc(why)}</span></div>`).join("")
+          : `<div class="item why">not reviewed by hand yet</div>`}
+     ${rv && rv.unclear.length ? rv.unclear.map(([d, why]) => `<div class="item"><span class="pill unclear">unclear</span> <b>${esc(d)}</b> <span class="why">${esc(why)}</span></div>`).join("") : ""}
+     ${rv ? `<div class="item why">Misses found by reading the box's log by hand.</div>` : ""}
      ${on.companies_through.length ? `<div class="row"><span>Listed, got through</span><span class="dots"></span><b>${on.companies_through.length}</b></div>
         <div class="names" style="color:#555">${on.companies_through.map(esc).join(", ")}</div>` : ""}
      <div class="rule"></div>
