@@ -105,6 +105,12 @@ main{padding:24px var(--gutter) 48px}
 .flags{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
 .flag{background:var(--raised);border:1px solid var(--line);border-top:3px solid var(--amber);border-radius:11px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
 .flag.auto_blocked{border-top-color:var(--green)}
+.flag.possible{border-top-color:var(--line)}
+.flag.possible .flag-score{color:var(--mute,#8a8f98)}
+.tier-head{display:flex;align-items:baseline;gap:12px;margin:6px 0 10px}
+.tier-head h3{margin:0;font-size:15px}
+.tier-n{font-family:var(--mono);font-weight:800;opacity:.7}
+.flags + .tier-head{margin-top:18px}
 .flag-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .flag-domain{font-family:var(--mono);font-weight:700;font-size:15px;word-break:break-all}
 .flag-score{font-family:var(--mono);font-weight:800;color:var(--amber);font-variant-numeric:tabular-nums}

@@ -43,7 +43,7 @@ sqlite3 /tmp/test.db "select domain, round(score,2), reasons from ml_flags order
 `--loop 5` (stop with Ctrl-C). Insert rows into `raw_lookups` from another terminal and new flags
 appear on the next pass.
 
-Other flags: `--threshold 0.95` (lowest score written; 0.95 is the default), `--models <dir>`, `--auto-block`.
+Other flags: `--threshold 0.8` (lowest score written; 0.8 is the default, the dashboard splits flags at 0.95), `--models <dir>`, `--auto-block`.
 
 Check the tests and the held-out numbers:
 
@@ -110,35 +110,36 @@ Unlisted is not the same as negative. Only add a domain to `content_negatives.tx
 confirmed as content. Whole first-party families can hide tracking hosts, so prefer exact
 hostnames.
 
-### Current numbers (held out, honest)
+### Current numbers (honest)
 
-Trained without InMobi and Vungle (leak check passes), 29 held-out domains. List-only and
-rules-only baselines catch 0 of 29, since the held-out companies are removed from every list.
+There are three test sets. Quote which one a number comes from.
 
-| Threshold | Default harness (141 confirmed content domains, incl. infrastructure) | `--skip-covered` (61 content domains the box would actually score) |
+| Set | What it is | Size |
 |---|---|---|
-| 0.7 | (not rerun) | caught 23 of 29 (79%), 2 false, 92% precision |
-| 0.8 | caught 18 of 29, 33 false flags, 35% precision | caught 18 of 29 (62%), 2 false, 90% precision |
-| 0.9 | (not rerun) | caught 15 of 29 (52%), 0 false, 100% precision |
+| **A. Official held-out test** | `ml_eval/evaluate.py --holdout InMobi --holdout Vungle --skip-covered`: InMobi and Vungle removed from every list, then scored | 29 tracker domains, 61 content domains |
+| **B. Ten-company held-out runs** | the same method repeated ten times, holding out one company each time (A is one of them) | 144 tracker domains in total, the same 61 content domains each run |
+| **C. Fresh box sessions** | Maps, Spotify and Samsung Weather recorded on the box after the model was final; flags checked by name | 13 flags at 0.8 |
 
-Why two columns: `ml/score.py` never scores a domain that is on a list or allowlist, so the
-right-hand column (`python3 -m ml_eval.evaluate ... --skip-covered`) is what the box does. The
-default column counts allowlisted infrastructure (Akamai, akadns, fbcdn...) as possible false
-flags. The allowlist is hand-reviewed and parts of it were chosen after seeing results, so treat
-the right-hand column as an upper estimate.
+A and B use data the features, allowlist and threshold were tuned on, so they are optimistic.
+C was never tuned on, but it is tiny. `--skip-covered` drops content domains on a list or
+allowlist and applies the scorer's login and call-server guards, which is what the box does.
 
-Across ten held-out companies (one at a time, same protocol, 144 tracker domains in total), with
-the scorer's login and call-server guards applied: at 0.8 the model catches 107 of 144 (74%) with
-at most 2 false flags per run among 61 content domains (mean precision 93%); at 0.9, 86 of 144
-(60%), mean precision 94%; at 0.95, 74 of 144 (51%), mean precision 94% (lowest company 67%).
-These come from data we tuned on, so they are optimistic.
+| Threshold | A: official held-out (29) | B: ten companies (144) | C: fresh box sessions |
+|---|---|---|---|
+| 0.8 | 18 caught (62%), 1 false, 95% precision | 107 caught (74%), mean precision 93% | 8 of 11 judged flags real, about 73% |
+| 0.9 | 15 caught (52%), 0 false | 86 caught (60%), mean precision 94% | about 73% |
+| 0.95 | 13 caught (45%), 0 false | 74 caught (51%), mean precision 94% (lowest company 67%) | 8 of 9 real, about 89% |
 
-**Fresh test (the honest number).** Three clean box sessions the model never saw (Maps, Spotify,
-Samsung Weather), every flag checked by name: at 0.95 it flags 9 domains, 8 of them real trackers on
-no list (`atmtd.com` x3, `bids.ws`, `ureca-lab.com`, `rapidedge.io`, `weatherfx.com`,
-`em.weather.com`) and 1 false (`api.locketcamera.com`): about 89%. At 0.8 it is about 73% (8 of 11
-judged). The scorer's default threshold is therefore 0.95. The sample is tiny; verdicts should be
-confirmed by a second person.
+List-only and rules-only baselines catch 0 of 29 in set A, because the held-out companies are
+removed from every list. Without `--skip-covered` (counting allowlisted infrastructure such as
+Akamai and fbcdn as possible false flags), precision in set A at 0.8 is 35%.
+
+The scorer writes every flag at 0.8 or more. The dashboard shows two tiers: **High confidence**
+(0.95 and up) and **Possible** (0.8 to 0.95). In set C the High confidence tier was 8 real
+trackers on no list (`atmtd.com` x3, `bids.ws`, `ureca-lab.com`, `rapidedge.io`, `weatherfx.com`,
+`em.weather.com`) and 1 false (`api.locketcamera.com`). The Possible tier had 4 hosts, at least 2
+of them content (`www5.whentowork.com`, `api.weather.com`). Verdicts should be confirmed by a
+second person.
 
 The scorer never scores login hosts (first-label tokens like `login`, `auth`, `sso`, `accounts`) or
 STUN/TURN call servers, because blocking either breaks the app and the model tends to score them high.

@@ -97,24 +97,38 @@ function setShield(on) {
   $("#shield-label").textContent = on ? "Shield on" : "Shield off";
 }
 
-/** Only flags caught in the SELECTED session: a flagged domain this session contacted. */
+/** Score at or above which a flag is shown as "High confidence"; below it (down to the scorer's
+ * 0.8 cutoff) it is "Possible". On fresh box sessions about 8 in 9 high-confidence flags were real. */
+const HIGH_CONFIDENCE = 0.95;
+
+function flagCard(f) {
+  const pct = Math.round(f.score * 100), d = esc(f.domain);
+  const acts = f.status === "auto_blocked"
+    ? `<span class="tag blocked">Blocked</span><button class="small" data-flag="${d}" data-status="suspected">Unblock</button>`
+    : `<button class="small" data-flag="${d}" data-status="auto_blocked">Block</button>
+       <button class="small" data-flag="${d}" data-status="dismissed" title="Not a tracker: hide it and stop flagging it">Dismiss</button>`;
+  return `<div class="flag ${esc(f.status)}${f.score < HIGH_CONFIDENCE ? " possible" : ""}">
+      <div class="flag-top"><span class="flag-domain">${d}</span><span class="flag-score">${pct}%</span></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <ul class="reasons">${(f.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+      <div class="flag-acts">${acts}</div>
+    </div>`;
+}
+
+/** Only flags caught in the SELECTED session: a flagged domain this session contacted.
+ * Two tiers by score: High confidence first, then Possible. */
 function renderFlags() {
   if (caughtHere === null) return;
-  const mine = flags.filter(f => caughtHere.has(f.domain) && f.status !== "dismissed");
-  render($("#flags"), mine.length ? `<div class="flags">${mine.map(f => {
-    const pct = Math.round(f.score * 100), d = esc(f.domain);
-    const acts = f.status === "auto_blocked"
-      ? `<span class="tag blocked">Blocked</span><button class="small" data-flag="${d}" data-status="suspected">Unblock</button>`
-      : `<button class="small" data-flag="${d}" data-status="auto_blocked">Block</button>
-         <button class="small" data-flag="${d}" data-status="dismissed" title="Not a tracker: hide it and stop flagging it">Dismiss</button>`;
-    return `<div class="flag ${esc(f.status)}">
-        <div class="flag-top"><span class="flag-domain">${d}</span><span class="flag-score">${pct}%</span></div>
-        <div class="bar"><i style="width:${pct}%"></i></div>
-        <ul class="reasons">${(f.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
-        <div class="flag-acts">${acts}</div>
-      </div>`;
-  }).join("")}</div>`
-    : `<div class="empty">Nothing caught in this session yet.</div>`);
+  const mine = flags.filter(f => caughtHere.has(f.domain) && f.status !== "dismissed")
+    .sort((x, y) => y.score - x.score);
+  if (!mine.length) { render($("#flags"), `<div class="empty">Nothing caught in this session yet.</div>`); return; }
+  const high = mine.filter(f => f.score >= HIGH_CONFIDENCE), maybe = mine.filter(f => f.score < HIGH_CONFIDENCE);
+  const tier = (title, hint, list) => list.length
+    ? `<div class="tier-head"><h3>${title} <span class="tier-n">${list.length}</span></h3><span class="hint">${hint}</span></div>
+       <div class="flags">${list.map(flagCard).join("")}</div>` : "";
+  render($("#flags"),
+    tier("High confidence", "Score 95% or more. Usually a real tracker.", high) +
+    tier("Possible", "Score 80 to 95%. The box thinks these might be trackers. Check before blocking.", maybe));
 }
 
 /** Apps on the left, tracking companies on the right, one curve per (app, company). */

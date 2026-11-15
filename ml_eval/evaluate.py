@@ -137,6 +137,10 @@ def evaluate(conn, holdout, negatives, threshold=0.5, scorers=None, skip_covered
     for name, fn in scorers or available_scorers():
         scores = fn(conn, L, seen)
         flagged = {d for d, s in scores.items() if s >= threshold}
+        if skip_covered:
+            # same guards as ml/score.py: login hosts and STUN/TURN servers are never scored on the box
+            from ml.score import is_auth_endpoint, is_call_infra
+            flagged = {d for d in flagged if not (is_auth_endpoint(d) or is_call_infra(d))}
         tp = sorted(d for d in pos if d in flagged)
         fp = sorted(d for d in neg if d in flagged)
         fo = sorted(d for d in other if d in flagged)
@@ -219,7 +223,8 @@ def main(argv=None):
     ap.add_argument("--note", default="")
     ap.add_argument("--skip-covered", action="store_true",
                     help="production view: drop content negatives already on a list/allowlist "
-                         "(the box never scores them). Default off.")
+                         "(the box never scores them) and apply ml/score.py's login/call-server "
+                         "guards. Default off.")
     ap.add_argument("--no-write", action="store_true")
     ap.add_argument("--suggest-negatives", action="store_true")
     a = ap.parse_args(argv)
