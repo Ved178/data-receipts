@@ -146,6 +146,33 @@ class DashboardTest(unittest.TestCase):
         self.assertIn("WhatsApp", [b["label"] for b in s["background"]])
         self.assertNotIn("WhatsApp", [c["company"] for g in s["receipt"] for c in g["companies"]])
 
+    def _shield_sessions(self):
+        conn = sqlite3.connect(self.db)
+        conn.execute("INSERT INTO sessions VALUES (91, '', 'Mole Game', 5000, 5100)")
+        conn.execute("INSERT INTO sessions VALUES (92, '', 'Mole Game', 6000, 6100)")
+        rows = [(91, 5001, "ads.vungle.com", 0), (91, 5002, "api.molegame.com", 0),
+                (92, 6001, "ads.vungle.com", 1), (92, 6002, "api.molegame.com", 0),
+                (92, 6010, "ssp.newadnet.io", 0), (92, 6011, "moloco.rtb.afafb.com", 1)]
+        conn.executemany("INSERT INTO raw_lookups(session_id, ts, device, qname, blocked) VALUES (?,?,'10.42.0.9',?,?)", rows)
+        conn.execute("INSERT INTO ml_flags VALUES ('newadnet.io', 0.7, '[\"x\"]', 'suspected', 'rules-v1', 1, 1)")
+        conn.commit()
+
+    def test_compare_before_after(self):
+        self._shield_sessions()
+        c = self.app.compare("Mole Game")
+        self.assertEqual((c["off"]["session_id"], c["on"]["session_id"]), (91, 92))
+        self.assertEqual(c["on"]["caught"], ["newadnet.io"])
+        self.assertTrue(c["on"]["game_still_worked"])   # own server answered, Shield-only blocks are trackers
+        self.assertGreaterEqual(c["on"]["companies_blocked"], 2)
+
+    def test_timeline_rows_and_switch(self):
+        self._shield_sessions()
+        t = self.app.timeline(92)
+        status = {c["company"]: c["events"][0][1] for c in t["companies"]}
+        self.assertEqual(status["newadnet.io"], "caught")
+        self.assertIn("blocked", status.values())
+        self.assertEqual([s["company"] for s in t["switches"]], ["newadnet.io"])
+
     def test_tracker_web_and_flags_load(self):
         web = self.app.tracker_web()
         self.assertIn("edges", web)
