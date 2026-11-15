@@ -12,3 +12,12 @@ wikipedia.org
 wikimedia.org
 github.com
 githubusercontent.com
+# added from run3 (Subway Surfers / Bike Race own servers, jQuery CDN, Samsung OS service)
+sybo.net
+sybo-aps.workers.dev
+topfreegames.com
+tfgco.com
+bikerace.com
+bikerace.me
+jquery.com
+samsungcloud.com

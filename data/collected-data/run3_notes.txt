@@ -1,0 +1,21 @@
+run3 — Shield OFF, test phone 10.42.0.33 (Android). Times UTC (board clock = Chicago + 6 h).
+File: run3_subway_surfers.log (dnsmasq format, 01:18:21 - 01:23:54, 708 lines, 0 blocked lookups)
+
+Marked: START "Subway Surfers" 01:18:17. END not marked; log ends 01:23:54.
+
+What the log actually shows (segments found from the domains):
+- 01:18:21 - 01:18:52  Bike Race (Top Free Games / Wildlife Studios) launching:
+                       topfreegames.com, tfgco.com, bikerace.com, analytics.wildlifestudios.com,
+                       topaz-analytics.com, singular.net, mtgglobals.com, moloco.com, facebook.
+                       -> NOT Subway Surfers; treat as a short Bike Race session.
+- 01:20:03 - 01:20:08  Snapchat background traffic (snapchat.com, sc-cdn.net). Not a test app.
+- 01:20:26 - 01:23:54  Subway Surfers (SYBO) cold launch at 01:20:26 (subway.prod.sybo.net),
+                       ad SDKs from 01:20:33. Use 01:20:26 as the session start for launch_burst.
+
+Subway Surfers third parties seen: Unity (LevelPlay mediation + Unity Ads), Vungle (Liftoff),
+AppLovin (applovin.com + applvn.com), InMobi, Digital Turbine/Fyber (inner-active.mobi, fyber.com),
+Mintegral (mtgglobals.com), BidMachine, Moloco, Kwai (kwcdn.com), SuperAwesome (kids' ad network),
+Google Ads (doubleclick, googlesyndication, googleadservices), Facebook graph,
+Temu (matka-us.temu.com, likely the advertiser of an ad shown ~01:20:58).
+
+Background traffic present all run: Instagram/Facebook (graph.instagram.com etc.), Google Play services.
