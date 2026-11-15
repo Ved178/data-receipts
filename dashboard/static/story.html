@@ -85,17 +85,21 @@ const short = (s, n) => s.length > n ? s.slice(0, n - 1) + "…" : s;
 // Hand review of the Shield-ON sessions on board #2 (Nov 14-15), read from the box's own log.
 // The detector can't know what it missed; a person checked every unlisted name that got through.
 // verdict: "confirmed" = known ad network; "suspected" = looks like ads, not verified.
-const REVIEW = {
-  "block blast": {
+const REVIEW = {   // keyed by the Shield-ON session the review was done on
+  "5": {  // Block Blast round 3
     caught: {"bidease.com": ["confirmed", "Bidease ad network"],
              "startappservice.com": ["confirmed", "StartApp ad network"],
              "startappelb.com": ["confirmed", "StartApp load balancer"],
              "ibl-video.site": ["suspected", "BIGO IP range, likely BIGO Ads video; not verified"]},
     missed: [["aarki.net", "Aarki ad network; also used with Shield OFF, so not \"new\""]],
-    unclear: []},
-  "knife hit": {caught: {}, missed: [], unclear: []},
-  "subway surfers": {caught: {}, missed: [],
-    unclear: [["lazybumblebee.com", "unknown; also used with Shield OFF, not judged"]]},
+    unclear: [], full: true},
+  "12": {  // Block Blast, later Shield-ON session
+    caught: {"abr.ge": ["confirmed", "Airbridge ad-tracking link (checked by hand)"]},
+    missed: [["aarki.net", "Aarki ad network got through again (also used with Shield OFF)"]],
+    unclear: [], full: false},
+  "7": {caught: {}, missed: [], unclear: [], full: true},   // Knife Hit
+  "9": {caught: {}, missed: [],                              // Subway Surfers
+    unclear: [["lazybumblebee.com", "unknown; also used with Shield OFF, not judged"]], full: true},
 };
 const params = new URLSearchParams(location.search);
 let sessions = [];
@@ -114,7 +118,7 @@ function renderBA(c){
      <div class="rule"></div>
      <div class="row"><span>Blocked</span><span class="dots"></span><b>0</b></div>
      <div class="row"><span>Game's own lookups answered</span><span class="dots"></span><b>${off.game_lookups_ok}</b></div>`);
-  const rv = REVIEW[(c.app || "").trim().toLowerCase()];
+  const rv = REVIEW[String(on.session_id)];
   const caught = on.caught.length, missed = rv ? rv.missed.length : 0;
   const tag = d => { const v = rv && rv.caught[d]; const verdict = v ? v[0] : "suspected";
     return `<div class="item"><span class="pill ${verdict}">${verdict}</span> <b>${esc(d)}</b>${v ? ` <span class="why">${esc(v[1])}</span>` : ""}</div>`; };
@@ -128,7 +132,7 @@ function renderBA(c){
      ${rv ? rv.missed.map(([d, why]) => `<div class="item"><span class="pill missed">missed</span> <b>${esc(d)}</b> <span class="why">${esc(why)}</span></div>`).join("")
           : `<div class="item why">not reviewed by hand yet</div>`}
      ${rv && rv.unclear.length ? rv.unclear.map(([d, why]) => `<div class="item"><span class="pill unclear">unclear</span> <b>${esc(d)}</b> <span class="why">${esc(why)}</span></div>`).join("") : ""}
-     ${rv ? `<div class="item why">Misses found by reading the box's log by hand.</div>` : ""}
+     ${rv ? `<div class="item why">${rv.full ? "Misses found by reading the box's log by hand." : "Partly reviewed by hand; other names in this session not checked yet."}</div>` : ""}
      ${on.companies_through.length ? `<div class="row"><span>Listed, got through</span><span class="dots"></span><b>${on.companies_through.length}</b></div>
         <div class="names" style="color:#555">${on.companies_through.map(esc).join(", ")}</div>` : ""}
      <div class="rule"></div>

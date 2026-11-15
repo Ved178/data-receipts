@@ -5,8 +5,8 @@ dns/detector.py - rules-v1 "whack-a-mole" detector (owner: Aarav). Stdlib only, 
 Idea: when Shield blocks an app's usual ad companies, the app quietly falls back to other ad
 networks that no list names. So:
 
-  MAIN SIGNAL (required): a domain that NEVER appeared in any Shield-OFF session of the same app,
-  but shows up in a Shield-ON session AFTER Shield blocked an ad company.
+  MAIN SIGNAL (required): a domain that NEVER appeared in any EARLIER Shield-OFF session of the same
+  app, but shows up in a Shield-ON session AFTER Shield blocked an ad company.
   SUPPORTING (raise the score, never flag on their own):
     - ad words as whole name parts: ssp, vast, impression, creative, ads, track, pixel, rtb
     - seen across unrelated apps
@@ -180,13 +180,16 @@ def detect(conn, only_session=None):
 
     found = {}
     for app_key, sids in by_app.items():
-        off = [s for s in sids if s not in shield_on and rows.get(s)]
-        if not off:
-            continue  # no Shield-OFF baseline for this app: the main signal can't be judged
-        seen_off = {base(q) for s in off for _, q, _, _ in rows[s]}
+        all_off = [s for s in sids if s not in shield_on and rows.get(s)]
         for sid in sids:
             if sid not in shield_on or (only_session is not None and sid != only_session):
                 continue
+            # Baseline = Shield-OFF sessions played BEFORE this one, so a later session can never
+            # change the verdict on an earlier round (session #11 must not un-flag round 3's Bidease).
+            off = [s for s in all_off if sessions[s]["start"] < sessions[sid]["start"]]
+            if not off:
+                continue  # no earlier Shield-OFF baseline: the main signal can't be judged
+            seen_off = {base(q) for s in off for _, q, _, _ in rows[s]}
             app = sessions[sid]["app"]
             first_block = None  # first time Shield blocked an AD company in this session
             for ts, q, chain, b in rows[sid]:
