@@ -86,6 +86,37 @@ def base(name):
     return ".".join(p[-2:])
 
 
+# Hosting / CDN names: never shown as a "company" on their own (whack-a-mole rows).
+HOSTING = ("akadns.net", "akamai.net", "akamaiedge.net", "akamaized.net", "akamaihd.net", "edgekey.net",
+           "edgesuite.net", "fastly.net", "fastlylb.net", "cloudfront.net", "amazonaws.com", "cdn77.org",
+           "cloudflare.net", "trafficmanager.net", "azureedge.net", "azurewebsites.net", "aliyuncs.com",
+           "aliyuncsslbintl.com", "googleapis.com", "googleusercontent.com")
+# A blocked hosting name usually says whose ad server it is (global.moloco.map.fastly.net).
+AD_KEYWORDS = (("moloco", "Moloco"), ("pangle", "Bytedance"), ("bytedance", "Bytedance"), ("tiktok", "Bytedance"),
+               ("applovin", "AppLovin"), ("applvn", "AppLovin"), ("safedk", "AppLovin"), ("unity3d", "Unity Ads"),
+               ("vungle", "Liftoff (Vungle)"), ("liftoff", "Liftoff (Vungle)"), ("inmobi", "InMobi"), ("ironsrc", "ironSource (Unity)"),
+               ("doubleclick", "Google"), ("googlesyndication", "Google"), ("appsflyer", "AppsFlyer"))
+
+
+def is_hosting(name):
+    d = name.lower().strip(".")
+    return any(d == h or d.endswith("." + h) for h in HOSTING)
+
+
+def ad_company_from_name(names):
+    for n in names:
+        low = n.lower()
+        for word, co in AD_KEYWORDS:
+            if word in low:
+                return co
+    return None
+
+
+def is_test_session(app):
+    """Sessions named "test ..." (e.g. "test reset") are hidden from session lists and the Tracker Web."""
+    return (app or "").strip().lower().startswith("test")
+
+
 def display(name):
     return DISPLAY.get(name, name)
 
