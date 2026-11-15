@@ -17,3 +17,4 @@ ml_eval
 tests
 docker-compose.yml
 docker/README.md
+*.tar.gz

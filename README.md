@@ -14,30 +14,34 @@ as containers from one arm64 image. The hotspot, firewall and DNS hand-off stay 
 before. The dashboard is reachable **only on DigIn** (`http://10.42.0.1`), never on the venue
 network. Details and troubleshooting: [`docker/README.md`](docker/README.md).
 
-**1. Build the image on your laptop** (Apple-Silicon Mac builds arm64 natively, ~30 s):
+**1. Build the image on your laptop.** An Apple-Silicon Mac builds arm64 natively (~30 s). The
+saved file is ~135 MB.
 ```bash
 docker buildx build --platform linux/arm64 -f docker/Dockerfile -t digin:latest --load .
-docker save digin:latest | gzip -1 > digin-arm64.tar.gz          # ~135 MB
+docker save digin:latest | gzip -1 > digin-arm64.tar.gz
 ```
 
-**2. Copy the image and the repo to the board** (while online; the demo runs offline):
+**2. Copy the image and the repo to the board** while it's online (the demo runs offline).
+`adb push` works instead of `scp`.
 ```bash
 scp digin-arm64.tar.gz arduino@<board address>:/home/arduino/
-scp -r ../madhacks26 arduino@<board address>:/home/arduino/      # or adb push
+scp -r ../madhacks26 arduino@<board address>:/home/arduino/
 ```
 
-**3. On the board, check Docker and load the image:**
+**3. On the board, check Docker and load the image.** The engine must be version 25 or newer. If
+`docker compose version` fails, run `sudo apt-get install docker-compose-plugin`.
 ```bash
-docker version; docker compose version     # engine 25+; if compose is missing:
-                                           # sudo apt-get install docker-compose-plugin
+docker version
+docker compose version
 docker load < ~/digin-arm64.tar.gz
 ```
 (If `docker` says "permission denied", put `sudo` in front, or run `sudo usermod -aG docker arduino` once and log in again.)
 
-**4. Optional per-board settings** in `/etc/digin/board.env` (same as `start_box.sh`):
+**4. Optional per-board settings** in `/etc/digin/board.env` (same as `start_box.sh`). Other keys:
+`SSID=`, `AP_MAC=`, `FLOWS=off`.
 ```bash
 sudo mkdir -p /etc/digin
-echo 'UPLINK=UWNet' | sudo tee /etc/digin/board.env    # also: SSID=, AP_MAC=, FLOWS=off
+echo 'UPLINK=UWNet' | sudo tee /etc/digin/board.env
 ```
 
 **5. Start everything (one command):**
@@ -48,11 +52,13 @@ This brings up the DigIn hotspot and firewall and starts the containers. It also
 `digin-box-docker.service`, so the box comes back by itself after every reboot. It disables the
 systemd path (`digin-box`, `digin-dns`, ...) so only one copy owns ports 53 and 80.
 
-**6. Check it:** join **DigIn** on a phone (mobile data off) and open `http://10.42.0.1`.
+**6. Check it:** join **DigIn** on a phone (mobile data off) and open `http://10.42.0.1`. On the
+board, `docker compose ps` should show dns as "healthy". `logs -f` shows live lookups (also works
+for dash, ml, detector, flows). The last line is the session CLI (`start`, `end`, `shield on|off`).
 ```bash
-docker compose ps                         # dns should be "healthy"
-docker compose logs -f dns                # live lookups (or: dash, ml, detector, flows)
-docker exec digin-dns python dns/digin_dns.py session start "Block Blast"   # CLI: start / end / shield on|off
+docker compose ps
+docker compose logs -f dns
+docker exec digin-dns python dns/digin_dns.py session start "Block Blast"
 ```
 
 | Need | Command |

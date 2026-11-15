@@ -31,21 +31,22 @@ as before. The CLI from the host, which doesn't need dnslib installed on the hos
 ## Build (on a Mac with Apple Silicon: native arm64, about 30 s)
 ```bash
 docker buildx build --platform linux/arm64 -f docker/Dockerfile -t digin:latest --load .
-docker save digin:latest | gzip -1 > digin-arm64.tar.gz      # ~135 MB (646 MB unpacked)
+docker save digin:latest | gzip -1 > digin-arm64.tar.gz
 scp digin-arm64.tar.gz arduino@<board>:/home/arduino/
 ```
-Or build on the board itself (needs internet, slower). Either way, the board never pulls anything at
+The saved file is ~135 MB (646 MB once loaded). Or build on the board itself (needs internet, slower). Either way, the board never pulls anything at
 demo time.
 
 ## On the board
 ```bash
-docker version; docker compose version           # App Lab ships Docker; check both (engine >= 25)
+docker version
+docker compose version
 docker load < ~/digin-arm64.tar.gz
 cd /home/arduino/madhacks26
-sudo deploy/start_box_docker.sh                  # hotspot + firewall + containers; also installs
-                                                 # digin-box-docker (boot) and disables digin-box
+sudo deploy/start_box_docker.sh
 ```
-`/etc/digin/board.env` works as before (`SSID`, `AP_MAC`, `UPLINK`, `FLOWS=off`).
+`start_box_docker.sh` brings up the hotspot, firewall and containers. It also installs
+`digin-box-docker` (start at boot) and disables `digin-box`. `/etc/digin/board.env` works as before (`SSID`, `AP_MAC`, `UPLINK`, `FLOWS=off`).
 
 The script runs `systemctl disable --now` on the systemd `digin-dns/dash/detector/ml/flows` units,
 so ports 53 and 80 have one owner. To go back to the systemd path:
