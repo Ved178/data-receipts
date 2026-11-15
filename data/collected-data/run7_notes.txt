@@ -1,0 +1,15 @@
+run7 — Shield OFF, test phone 10.42.0.33 (Android). Times UTC (board clock = Chicago + 6 h).
+File: run7_game.log (dnsmasq format, 01:48:21 - 01:51:52)
+Game: likely a Fingersoft game (ads3.fingersoft.net, e.g. Hill Climb Racing). TO CONFIRM.
+GAP: copied from the live window, so it starts at 01:48:21, after the launch. The launch slice
+is still in /tmp/digin.log on the box.
+
+Third parties seen: Unity (LevelPlay mediation + Unity Ads), Digital Turbine/Fyber (inner-active.mobi,
+fyber.com), Vungle (Liftoff), Moloco, Mintegral (rayjump.com, mtgglobals.com, mintegral.net),
+AppLovin, InMobi, Chartboost, Google Ads (googlesyndication, adclick.g.doubleclick.net),
+Kwai (kwcdn.com), Facebook (graph/www).
+Ad click at ~01:51:39: adclick.g.doubleclick.net -> www.temu.com (Temu ad was tapped).
+Unknown worth flagging for the model: telemetry.tk0x1.com -> CNAME envoy1.envoy-track...ov1o.com
+(not on any list we use; "envoy-track" in the CNAME target).
+First party: ads3.fingersoft.net (game's own ad server, CNAME to Azure).
+Noise: WhatsApp 01:49:14; www.google.com every ~30 s = Android connectivity check.

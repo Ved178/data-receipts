@@ -1,0 +1,211 @@
+IPProto,SrcIP,SrcPort,DstIp,DstPort,UID,App,PackageName,Proto,Status,Info,BytesSent,BytesRcvd,PktsSent,PktsRcvd,FirstSeen,LastSeen
+6,10.215.173.1,40264,157.240.254.61,443,10338,WhatsApp,com.whatsapp,TCP,Closed,,2123,2715,4,5,2026-11-14T14:12:27.953-06:00,2026-11-14T14:12:58.509-06:00
+17,10.215.173.1,16440,10.215.173.2,53,10338,WhatsApp,com.whatsapp,DNS,Closed,g.whatsapp.net,60,111,1,1,2026-11-14T14:12:27.957-06:00,2026-11-14T14:12:27.975-06:00
+17,10.215.173.1,29603,10.215.173.2,53,10067,Meta Services,com.facebook.services,DNS,Closed,graph.facebook.com,64,116,1,1,2026-11-14T14:12:28.467-06:00,2026-11-14T14:12:28.487-06:00
+6,10.215.173.1,47230,157.240.254.12,443,10067,Meta Services,com.facebook.services,HTTPS,Closed,graph.facebook.com,2338,2410,8,9,2026-11-14T14:12:28.495-06:00,2026-11-14T14:12:28.594-06:00
+17,10.215.173.1,21822,10.215.173.2,53,10067,Meta Services,com.facebook.services,DNS,Closed,z-m-gateway.facebook.com,70,126,1,1,2026-11-14T14:12:29.481-06:00,2026-11-14T14:12:29.503-06:00
+6,10.215.173.1,54194,157.240.254.33,443,10067,Meta Services,com.facebook.services,HTTPS,Closed,z-m-gateway.facebook.com,3574,4689,23,18,2026-11-14T14:12:29.507-06:00,2026-11-14T14:13:29.992-06:00
+6,10.215.173.1,47232,157.240.254.12,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,graph.facebook.com,2550,8103,17,17,2026-11-14T14:12:30.241-06:00,2026-11-14T14:12:36.023-06:00
+6,10.215.173.1,47240,157.240.254.12,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,graph.facebook.com,2421,8726,14,13,2026-11-14T14:12:30.244-06:00,2026-11-14T14:12:35.819-06:00
+6,10.215.173.1,47256,157.240.254.12,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,graph.facebook.com,1554,5833,13,13,2026-11-14T14:12:30.248-06:00,2026-11-14T14:12:35.220-06:00
+17,10.215.173.1,21382,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,firebaselogging-pa.googleapis.com,79,207,1,1,2026-11-14T14:12:30.591-06:00,2026-11-14T14:12:30.610-06:00
+6,10.215.173.1,33004,172.217.117.4,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,firebaselogging-pa.googleapis.com,2636,4920,11,11,2026-11-14T14:12:30.615-06:00,2026-11-14T14:12:36.022-06:00
+17,10.215.173.1,56580,157.240.254.12,443,10298,Facebook,com.facebook.katana,QUIC,Closed,graph.facebook.com,5736,4412,11,11,2026-11-14T14:12:30.826-06:00,2026-11-14T14:12:31.272-06:00
+6,10.215.173.1,54850,157.240.254.12,443,10298,Facebook,com.facebook.katana,HTTPS,Closed,graph.facebook.com,1974,1807,7,6,2026-11-14T14:12:30.833-06:00,2026-11-14T14:12:41.797-06:00
+17,10.215.173.1,57511,10.215.173.2,53,10227,Google Play services,com.google.android.gms,DNS,Closed,games.googleapis.com,66,194,1,1,2026-11-14T14:12:30.912-06:00,2026-11-14T14:12:30.917-06:00
+17,10.215.173.1,42054,172.217.117.4,443,10227,Google Play services,com.google.android.gms,QUIC,Closed,games.googleapis.com,8474,57505,53,74,2026-11-14T14:12:30.941-06:00,2026-11-14T14:12:50.695-06:00
+17,10.215.173.1,45069,10.215.173.2,53,10227,Google Play services,com.google.android.gms,DNS,Closed,gameswhitelisted.googleapis.com,77,205,1,1,2026-11-14T14:12:31.011-06:00,2026-11-14T14:12:31.017-06:00
+17,10.215.173.1,56235,172.217.112.4,443,10227,Google Play services,com.google.android.gms,QUIC,Closed,gameswhitelisted.googleapis.com,6315,19451,16,24,2026-11-14T14:12:31.022-06:00,2026-11-14T14:12:31.212-06:00
+17,10.215.173.1,11483,10.215.173.2,53,10229,Google Play Store,com.android.vending,DNS,Closed,play-fe.googleapis.com,68,84,1,1,2026-11-14T14:12:31.148-06:00,2026-11-14T14:12:31.154-06:00
+17,10.215.173.1,47023,142.250.177.78,443,10229,Google Play Store,com.android.vending,QUIC,Closed,play-fe.googleapis.com,7901,10156,22,19,2026-11-14T14:12:31.158-06:00,2026-11-14T14:12:31.394-06:00
+6,10.215.173.1,46336,142.250.177.78,443,10229,Google Play Store,com.android.vending,HTTPS,Closed,play-fe.googleapis.com,2168,5774,8,8,2026-11-14T14:12:31.160-06:00,2026-11-14T14:13:33.436-06:00
+17,10.215.173.1,34362,157.240.26.27,443,10298,Facebook,com.facebook.katana,QUIC,Closed,,4700,4820,8,10,2026-11-14T14:12:31.253-06:00,2026-11-14T14:12:31.278-06:00
+17,10.215.173.1,59054,10.215.173.2,53,10298,Facebook,com.facebook.katana,DNS,Closed,scontent-msp1-1.xx.fbcdn.net,74,90,1,1,2026-11-14T14:12:31.255-06:00,2026-11-14T14:12:31.261-06:00
+17,10.215.173.1,23550,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,subway.prod.sybo.net,66,98,1,1,2026-11-14T14:12:32.189-06:00,2026-11-14T14:12:32.226-06:00
+6,10.215.173.1,58496,104.18.42.2,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,subway.prod.sybo.net,7403,4805,14,16,2026-11-14T14:12:32.231-06:00,2026-11-14T14:12:36.037-06:00
+17,10.215.173.1,40572,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,network-check.sybo.net,68,84,1,1,2026-11-14T14:12:32.760-06:00,2026-11-14T14:12:32.785-06:00
+17,10.215.173.1,58010,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,server-time.sybo-aps.workers.dev,78,110,1,1,2026-11-14T14:12:32.849-06:00,2026-11-14T14:12:32.880-06:00
+6,10.215.173.1,34324,104.21.57.97,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,server-time.sybo-aps.workers.dev,1156,3951,9,9,2026-11-14T14:12:32.887-06:00,2026-11-14T14:13:33.437-06:00
+6,10.215.173.1,58504,104.18.42.2,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,subway.prod.sybo.net,8542,81129,66,65,2026-11-14T14:12:33.333-06:00,2026-11-14T14:12:39.774-06:00
+17,10.215.173.1,16134,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,where.sybo.net,60,92,1,1,2026-11-14T14:12:33.622-06:00,2026-11-14T14:12:33.638-06:00
+6,10.215.173.1,38088,172.64.145.254,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,where.sybo.net,1099,3664,7,8,2026-11-14T14:12:33.641-06:00,2026-11-14T14:13:33.438-06:00
+6,10.215.173.1,58514,104.18.42.2,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,subway.prod.sybo.net,1972,3628,8,10,2026-11-14T14:12:33.803-06:00,2026-11-14T14:12:33.958-06:00
+17,10.215.173.1,35823,10.215.173.2,53,10227,Google Play services,com.google.android.gms,DNS,Closed,mtalk.google.com,62,117,1,1,2026-11-14T14:12:33.936-06:00,2026-11-14T14:12:33.948-06:00
+6,10.215.173.1,47684,142.251.4.188,5228,10227,Google Play services,com.google.android.gms,TLS,Closed,mtalk.google.com,2851,4324,11,12,2026-11-14T14:12:33.954-06:00,2026-11-14T14:13:37.652-06:00
+17,10.215.173.1,12508,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,manifest.tower.sybo.net,69,101,1,1,2026-11-14T14:12:34.027-06:00,2026-11-14T14:12:34.052-06:00
+6,10.215.173.1,58524,104.18.42.2,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,manifest.tower.sybo.net,1274,3725,8,10,2026-11-14T14:12:34.055-06:00,2026-11-14T14:12:34.214-06:00
+17,10.215.173.1,15486,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,gamedata.tower.sybo.net,69,101,1,1,2026-11-14T14:12:34.218-06:00,2026-11-14T14:12:34.236-06:00
+6,10.215.173.1,38090,172.64.145.254,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,gamedata.tower.sybo.net,1411,224918,20,34,2026-11-14T14:12:34.240-06:00,2026-11-14T14:13:38.505-06:00
+17,10.215.173.1,41622,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,api.helpshift.com,63,146,1,1,2026-11-14T14:12:35.122-06:00,2026-11-14T14:12:35.132-06:00
+6,10.215.173.1,46042,104.18.26.180,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,api.helpshift.com,2486,4557,10,9,2026-11-14T14:12:35.134-06:00,2026-11-14T14:12:36.034-06:00
+6,10.215.173.1,58538,104.18.42.2,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,subway.prod.sybo.net,3051,4447,12,11,2026-11-14T14:12:35.368-06:00,2026-11-14T14:12:39.769-06:00
+17,10.215.173.1,34704,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,i-sdk.mediation.unity3d.com,73,137,1,1,2026-11-14T14:12:35.698-06:00,2026-11-14T14:12:35.704-06:00
+6,10.215.173.1,42964,108.156.91.89,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,i-sdk.mediation.unity3d.com,3030,22906,14,14,2026-11-14T14:12:35.707-06:00,2026-11-14T14:12:36.237-06:00
+17,10.215.173.1,6706,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,o-sdk.mediation.unity3d.com,73,137,1,1,2026-11-14T14:12:35.938-06:00,2026-11-14T14:12:35.946-06:00
+6,10.215.173.1,57766,143.204.204.106,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,o-sdk.mediation.unity3d.com,3999,5764,10,10,2026-11-14T14:12:35.948-06:00,2026-11-14T14:12:36.315-06:00
+6,10.215.173.1,57774,143.204.204.106,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,o-sdk.mediation.unity3d.com,2727,5804,10,11,2026-11-14T14:12:35.950-06:00,2026-11-14T14:12:36.318-06:00
+6,10.215.173.1,57780,143.204.204.106,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,o-sdk.mediation.unity3d.com,3553,5724,9,9,2026-11-14T14:12:35.961-06:00,2026-11-14T14:12:36.315-06:00
+6,10.215.173.1,57796,143.204.204.106,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,o-sdk.mediation.unity3d.com,2702,5764,10,10,2026-11-14T14:12:35.968-06:00,2026-11-14T14:12:36.355-06:00
+17,10.215.173.1,13678,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,sdkapi.dsp-api.moloco.com,71,87,1,1,2026-11-14T14:12:36.126-06:00,2026-11-14T14:12:36.136-06:00
+6,10.215.173.1,55274,34.54.122.72,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,sdkapi.dsp-api.moloco.com,1687,8535,9,9,2026-11-14T14:12:36.141-06:00,2026-11-14T14:12:37.654-06:00
+17,10.215.173.1,47226,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,i-adq.mediation.unity3d.com,73,137,1,1,2026-11-14T14:12:36.143-06:00,2026-11-14T14:12:36.150-06:00
+6,10.215.173.1,33256,3.169.149.38,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,i-adq.mediation.unity3d.com,1773,6378,10,10,2026-11-14T14:12:36.154-06:00,2026-11-14T14:12:36.398-06:00
+17,10.215.173.1,31562,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,config.ads.vungle.com,67,195,1,1,2026-11-14T14:12:36.162-06:00,2026-11-14T14:12:36.172-06:00
+6,10.215.173.1,57434,54.84.209.33,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,config.ads.vungle.com,3010,6102,16,17,2026-11-14T14:12:36.178-06:00,2026-11-14T14:12:38.317-06:00
+17,10.215.173.1,9774,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,sdkopmetrics-us.dsp-api.moloco.com,80,96,1,1,2026-11-14T14:12:36.182-06:00,2026-11-14T14:12:36.187-06:00
+6,10.215.173.1,45762,34.110.173.122,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,sdkopmetrics-us.dsp-api.moloco.com,1556,8146,9,8,2026-11-14T14:12:36.189-06:00,2026-11-14T14:12:37.303-06:00
+17,10.215.173.1,51859,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,configure-tcp-android.mtgglobals.com,82,203,1,1,2026-11-14T14:12:36.200-06:00,2026-11-14T14:12:36.206-06:00
+6,10.215.173.1,48146,3.221.10.78,9377,10312,Subway Surf,com.kiloo.subwaysurf,TCP,Closed,configure-tcp-android.mtgglobals.com,1208,3175,7,7,2026-11-14T14:12:36.212-06:00,2026-11-14T14:12:36.321-06:00
+17,10.215.173.1,25970,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,a-adq.mediation.unity3d.com,73,137,1,1,2026-11-14T14:12:36.245-06:00,2026-11-14T14:12:36.258-06:00
+6,10.215.173.1,32884,3.167.183.68,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,a-adq.mediation.unity3d.com,9743,646280,133,133,2026-11-14T14:12:36.262-06:00,2026-11-14T14:12:43.610-06:00
+6,10.215.173.1,32894,3.167.183.68,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,a-adq.mediation.unity3d.com,1364,47756,12,15,2026-11-14T14:12:36.264-06:00,2026-11-14T14:12:37.437-06:00
+17,10.215.173.1,25638,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,o-adq.mediation.unity3d.com,73,137,1,1,2026-11-14T14:12:36.288-06:00,2026-11-14T14:12:36.297-06:00
+6,10.215.173.1,33262,3.169.149.38,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,o-adq.mediation.unity3d.com,2458,5793,10,11,2026-11-14T14:12:36.304-06:00,2026-11-14T14:12:37.637-06:00
+17,10.215.173.1,46845,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,cdn-adn-https.mtgglobals.com,74,181,1,1,2026-11-14T14:12:36.336-06:00,2026-11-14T14:12:36.345-06:00
+6,10.215.173.1,49548,99.86.77.8,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,cdn-adn-https.mtgglobals.com,1566,46363,16,23,2026-11-14T14:12:36.351-06:00,2026-11-14T14:12:36.478-06:00
+17,10.215.173.1,30114,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,gateway.unityads.unity3d.com,74,147,1,1,2026-11-14T14:12:36.619-06:00,2026-11-14T14:12:36.627-06:00
+17,10.215.173.1,49589,34.149.76.49,443,10312,Subway Surf,com.kiloo.subwaysurf,QUIC,Closed,gateway.unityads.unity3d.com,32037,21330,56,53,2026-11-14T14:12:36.637-06:00,2026-11-14T14:12:43.829-06:00
+17,10.215.173.1,21508,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,aa-sdk.s3.eu-west-1.amazonaws.com,79,251,1,1,2026-11-14T14:12:36.862-06:00,2026-11-14T14:12:36.884-06:00
+6,10.215.173.1,50618,52.92.4.10,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,aa-sdk.s3.eu-west-1.amazonaws.com,1395,6172,13,12,2026-11-14T14:12:36.888-06:00,2026-11-14T14:12:38.585-06:00
+17,10.215.173.1,16093,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,googleads.g.doubleclick.net,73,89,1,1,2026-11-14T14:12:36.992-06:00,2026-11-14T14:12:37.003-06:00
+6,10.215.173.1,41926,142.251.214.66,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,googleads.g.doubleclick.net,4503,221293,42,79,2026-11-14T14:12:37.071-06:00,2026-11-14T14:13:38.505-06:00
+17,10.215.173.1,48181,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,cdn.iads.unity3d.com,66,82,1,1,2026-11-14T14:12:37.183-06:00,2026-11-14T14:12:37.191-06:00
+6,10.215.173.1,38314,3.170.106.45,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,cdn.iads.unity3d.com,1302,17306,11,11,2026-11-14T14:12:37.211-06:00,2026-11-14T14:12:37.927-06:00
+6,10.215.173.1,57806,143.204.204.106,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,o-sdk.mediation.unity3d.com,2734,1106,9,9,2026-11-14T14:12:37.554-06:00,2026-11-14T14:12:39.067-06:00
+17,10.215.173.1,19077,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,cdn2.inner-active.mobi,68,130,1,1,2026-11-14T14:12:37.577-06:00,2026-11-14T14:12:37.582-06:00
+6,10.215.173.1,54246,146.75.79.52,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,cdn2.inner-active.mobi,2201,13767,14,13,2026-11-14T14:12:37.585-06:00,2026-11-14T14:12:39.074-06:00
+17,10.215.173.1,31953,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,api.bidmachine.io,63,95,1,1,2026-11-14T14:12:37.818-06:00,2026-11-14T14:12:37.828-06:00
+6,10.215.173.1,59078,104.18.2.182,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,api.bidmachine.io,2504,11532,9,8,2026-11-14T14:12:37.839-06:00,2026-11-14T14:12:39.263-06:00
+17,10.215.173.1,33053,142.251.214.66,443,10312,Subway Surf,com.kiloo.subwaysurf,QUIC,Closed,googleads.g.doubleclick.net,5956,21149,19,27,2026-11-14T14:12:37.910-06:00,2026-11-14T14:12:38.378-06:00
+6,10.215.173.1,38328,3.170.106.45,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,cdn.iads.unity3d.com,2635,7613,10,9,2026-11-14T14:12:38.360-06:00,2026-11-14T14:13:38.506-06:00
+17,10.215.173.1,49622,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,nfflr-us.bidmachine.io,68,228,1,1,2026-11-14T14:12:38.431-06:00,2026-11-14T14:12:38.445-06:00
+6,10.215.173.1,39814,173.237.8.132,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,nfflr-us.bidmachine.io,2267,6477,10,9,2026-11-14T14:12:38.451-06:00,2026-11-14T14:12:39.331-06:00
+6,10.215.173.1,38338,3.170.106.45,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,cdn.iads.unity3d.com,2932,154625,17,23,2026-11-14T14:12:38.542-06:00,2026-11-14T14:13:38.506-06:00
+6,10.215.173.1,38346,3.170.106.45,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,cdn.iads.unity3d.com,1859,16534,13,15,2026-11-14T14:12:39.018-06:00,2026-11-14T14:12:39.653-06:00
+6,10.215.173.1,38356,3.170.106.45,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,cdn.iads.unity3d.com,2142,153963,20,28,2026-11-14T14:12:39.020-06:00,2026-11-14T14:12:39.562-06:00
+17,10.215.173.1,19619,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,unif-id.ssp.inmobi.com,68,100,1,1,2026-11-14T14:12:39.084-06:00,2026-11-14T14:12:39.090-06:00
+6,10.215.173.1,34922,35.212.47.75,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,unif-id.ssp.inmobi.com,4043,6670,12,13,2026-11-14T14:12:39.094-06:00,2026-11-14T14:12:43.611-06:00
+6,10.215.173.1,55290,34.54.122.72,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,sdkapi.dsp-api.moloco.com,1656,2401,9,10,2026-11-14T14:12:39.128-06:00,2026-11-14T14:12:40.934-06:00
+17,10.215.173.1,5292,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,ae.iads.unity3d.com,65,129,1,1,2026-11-14T14:12:39.135-06:00,2026-11-14T14:12:39.140-06:00
+6,10.215.173.1,55254,3.167.183.85,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,ae.iads.unity3d.com,3535,6771,11,9,2026-11-14T14:12:39.145-06:00,2026-11-14T14:12:39.291-06:00
+17,10.215.173.1,33186,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,o-sdk.mediation.unity3d.com,73,137,1,1,2026-11-14T14:12:39.153-06:00,2026-11-14T14:12:39.176-06:00
+6,10.215.173.1,38370,3.170.106.45,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,cdn.iads.unity3d.com,2128,266463,32,57,2026-11-14T14:12:39.175-06:00,2026-11-14T14:12:40.011-06:00
+6,10.215.173.1,57936,143.204.204.80,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,o-sdk.mediation.unity3d.com,3444,1106,9,9,2026-11-14T14:12:39.179-06:00,2026-11-14T14:12:39.734-06:00
+17,10.215.173.1,62495,10.215.173.2,53,10227,Google Play services,com.google.android.gms,DNS,Closed,safebrowsing.googleapis.com,73,89,1,1,2026-11-14T14:12:39.303-06:00,2026-11-14T14:12:39.466-06:00
+17,10.215.173.1,54219,142.251.214.66,443,10227,Google Play services,com.google.android.gms,QUIC,Closed,googleads.g.doubleclick.net,10599,12205,19,18,2026-11-14T14:12:39.356-06:00,2026-11-14T14:12:39.795-06:00
+6,10.215.173.1,41938,142.251.214.66,443,10227,Google Play services,com.google.android.gms,HTTPS,Closed,googleads.g.doubleclick.net,2223,5594,8,7,2026-11-14T14:12:39.540-06:00,2026-11-14T14:12:39.682-06:00
+17,10.215.173.1,52505,192.178.157.95,443,10227,Google Play services,com.google.android.gms,QUIC,Closed,safebrowsing.googleapis.com,7579,14461,13,18,2026-11-14T14:12:39.544-06:00,2026-11-14T14:12:39.627-06:00
+17,10.215.173.1,22834,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,config.inmobi.com,63,276,1,1,2026-11-14T14:12:39.548-06:00,2026-11-14T14:12:39.558-06:00
+6,10.215.173.1,39448,35.212.14.162,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,config.inmobi.com,2133,14008,10,10,2026-11-14T14:12:39.579-06:00,2026-11-14T14:12:40.666-06:00
+17,10.141.233.45,36123,142.250.177.78,443,10229,Google Play Store,com.android.vending,QUIC,Closed,play-fe.googleapis.com,64441,167450,197,282,2026-11-14T14:12:39.663-06:00,2026-11-14T14:12:45.028-06:00
+6,10.215.173.1,58548,104.18.42.2,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,subway.prod.sybo.net,148636,4562,29,19,2026-11-14T14:12:39.681-06:00,2026-11-14T14:13:34.424-06:00
+6,10.215.173.1,58560,104.18.42.2,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,subway.prod.sybo.net,9151,3923,10,10,2026-11-14T14:12:39.821-06:00,2026-11-14T14:12:42.007-06:00
+17,10.215.173.1,48496,10.215.173.2,53,10227,Google Play services,com.google.android.gms,DNS,Closed,pubads.g.doubleclick.net,70,86,1,1,2026-11-14T14:12:40.195-06:00,2026-11-14T14:12:40.208-06:00
+6,10.215.173.1,53348,142.251.34.226,443,10227,Google Play services,com.google.android.gms,HTTPS,Closed,pubads.g.doubleclick.net,4737,4736,7,6,2026-11-14T14:12:40.216-06:00,2026-11-14T14:12:40.407-06:00
+17,10.215.173.1,18278,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,gw1.mediation.unity3d.com,71,178,1,1,2026-11-14T14:12:40.477-06:00,2026-11-14T14:12:40.484-06:00
+6,10.215.173.1,54262,13.225.47.65,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,gw1.mediation.unity3d.com,78787,126639,36,38,2026-11-14T14:12:40.488-06:00,2026-11-14T14:12:47.016-06:00
+6,10.215.173.1,57944,143.204.204.80,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,o-sdk.mediation.unity3d.com,15285,7440,19,20,2026-11-14T14:12:40.572-06:00,2026-11-14T14:12:43.641-06:00
+6,10.215.173.1,57956,143.204.204.80,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,o-sdk.mediation.unity3d.com,8271,1944,13,14,2026-11-14T14:12:40.579-06:00,2026-11-14T14:12:43.610-06:00
+17,10.215.173.1,57045,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,logs.ads.vungle.com,65,193,1,1,2026-11-14T14:12:41.364-06:00,2026-11-14T14:12:41.371-06:00
+6,10.215.173.1,59662,35.169.41.224,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,logs.ads.vungle.com,2972,4922,18,19,2026-11-14T14:12:41.374-06:00,2026-11-14T14:12:43.479-06:00
+6,10.215.173.1,40786,142.251.214.66,443,10227,Google Play services,com.google.android.gms,HTTPS,Closed,googleads.g.doubleclick.net,76830,14261,23,24,2026-11-14T14:12:42.156-06:00,2026-11-14T14:12:45.144-06:00
+6,10.215.173.1,43542,146.75.79.52,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,cdn2.inner-active.mobi,3039,59193,20,27,2026-11-14T14:12:43.492-06:00,2026-11-14T14:12:44.682-06:00
+6,10.215.173.1,43558,146.75.79.52,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,cdn2.inner-active.mobi,1364,6378,10,10,2026-11-14T14:12:43.495-06:00,2026-11-14T14:12:43.631-06:00
+6,10.215.173.1,43560,146.75.79.52,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,cdn2.inner-active.mobi,1415,7288,11,10,2026-11-14T14:12:43.502-06:00,2026-11-14T14:12:44.351-06:00
+6,10.215.173.1,43568,146.75.79.52,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,cdn2.inner-active.mobi,1365,4732,10,9,2026-11-14T14:12:43.510-06:00,2026-11-14T14:12:43.773-06:00
+6,10.215.173.1,43574,146.75.79.52,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,cdn2.inner-active.mobi,1344,5195,9,9,2026-11-14T14:12:43.524-06:00,2026-11-14T14:12:43.776-06:00
+6,10.215.173.1,43580,146.75.79.52,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,cdn2.inner-active.mobi,1327,19612,9,9,2026-11-14T14:12:43.530-06:00,2026-11-14T14:12:44.353-06:00
+17,10.215.173.1,61214,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,cached-ad-d.fyber.com,67,83,1,1,2026-11-14T14:12:43.594-06:00,2026-11-14T14:12:43.605-06:00
+6,10.215.173.1,60646,34.54.247.155,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,cached-ad-d.fyber.com,1315,7649,7,8,2026-11-14T14:12:43.608-06:00,2026-11-14T14:12:43.800-06:00
+6,10.215.173.1,60656,34.54.247.155,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,cached-ad-d.fyber.com,1395,7834,9,10,2026-11-14T14:12:43.621-06:00,2026-11-14T14:12:43.805-06:00
+6,10.215.173.1,40788,142.251.214.66,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,googleads.g.doubleclick.net,2103,4800,8,9,2026-11-14T14:12:43.640-06:00,2026-11-14T14:12:43.761-06:00
+17,10.215.173.1,15380,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,commvod.kwcdn.com,63,183,1,1,2026-11-14T14:12:43.833-06:00,2026-11-14T14:12:43.840-06:00
+6,10.215.173.1,35056,89.187.180.93,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,commvod.kwcdn.com,12526,7925345,288,844,2026-11-14T14:12:43.848-06:00,2026-11-14T14:12:46.981-06:00
+6,10.215.173.1,35072,89.187.180.93,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,commvod.kwcdn.com,17182,7110151,405,746,2026-11-14T14:12:43.884-06:00,2026-11-14T14:12:46.692-06:00
+6,10.215.173.1,60250,143.204.204.80,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,o-sdk.mediation.unity3d.com,9302,6522,13,13,2026-11-14T14:12:44.236-06:00,2026-11-14T14:12:47.453-06:00
+6,10.215.173.1,60266,143.204.204.80,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,o-sdk.mediation.unity3d.com,3167,5764,10,10,2026-11-14T14:12:44.267-06:00,2026-11-14T14:12:44.697-06:00
+6,10.215.173.1,60280,143.204.204.80,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,o-sdk.mediation.unity3d.com,3424,5724,9,9,2026-11-14T14:12:44.275-06:00,2026-11-14T14:12:45.661-06:00
+6,10.215.173.1,60288,143.204.204.80,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,o-sdk.mediation.unity3d.com,3063,5724,9,9,2026-11-14T14:12:44.284-06:00,2026-11-14T14:12:45.999-06:00
+17,10.215.173.1,4747,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,o-iab-notifications.mediation.unity3d.com,87,151,1,1,2026-11-14T14:12:44.999-06:00,2026-11-14T14:12:45.009-06:00
+6,10.215.173.1,40802,142.251.214.66,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,googleads.g.doubleclick.net,9672,41680,13,13,2026-11-14T14:12:45.001-06:00,2026-11-14T14:12:46.700-06:00
+17,10.215.173.1,56365,142.250.177.78,443,10229,Google Play Store,com.android.vending,UDP,Closed,play-fe.googleapis.com,1278,1278,1,1,2026-11-14T14:12:45.002-06:00,2026-11-14T14:12:45.024-06:00
+6,10.215.173.1,46010,18.172.134.21,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,o-iab-notifications.mediation.unity3d.com,1696,5672,9,8,2026-11-14T14:12:45.013-06:00,2026-11-14T14:12:47.046-06:00
+6,10.215.173.1,40806,142.251.214.66,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,googleads.g.doubleclick.net,2103,4932,7,8,2026-11-14T14:12:45.145-06:00,2026-11-14T14:12:46.478-06:00
+17,10.215.173.1,43526,142.250.177.78,443,10229,Google Play Store,com.android.vending,QUIC,Closed,play-fe.googleapis.com,42924,77740,110,138,2026-11-14T14:12:45.147-06:00,2026-11-14T14:12:48.781-06:00
+17,10.215.173.1,30080,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,notifications-gke-sdk-bidding-d.fyber.com,87,103,1,1,2026-11-14T14:12:45.972-06:00,2026-11-14T14:12:45.999-06:00
+17,10.141.233.45,58350,142.250.177.78,443,10229,Google Play Store,com.android.vending,QUIC,Closed,play-fe.googleapis.com,443711,6619238,1068,5413,2026-11-14T14:12:45.978-06:00,2026-11-14T14:12:54.936-06:00
+6,10.215.173.1,35662,34.54.181.134,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,notifications-gke-sdk-bidding-d.fyber.com,1358,5595,9,8,2026-11-14T14:12:46.005-06:00,2026-11-14T14:12:47.182-06:00
+17,10.215.173.1,36630,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,pagead2.googlesyndication.com,75,91,1,1,2026-11-14T14:12:46.294-06:00,2026-11-14T14:12:46.302-06:00
+17,10.215.173.1,7976,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,fonts.googleapis.com,66,82,1,1,2026-11-14T14:12:46.296-06:00,2026-11-14T14:12:46.305-06:00
+17,10.215.173.1,1124,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,tpc.googlesyndication.com,71,87,1,1,2026-11-14T14:12:46.297-06:00,2026-11-14T14:12:46.305-06:00
+17,10.215.173.1,12396,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,www.googletagservices.com,71,87,1,1,2026-11-14T14:12:46.297-06:00,2026-11-14T14:12:46.307-06:00
+6,10.215.173.1,59916,142.251.210.194,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,pagead2.googlesyndication.com,3301,24214,13,10,2026-11-14T14:12:46.308-06:00,2026-11-14T14:12:46.758-06:00
+6,10.215.173.1,59932,142.251.210.194,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,pagead2.googlesyndication.com,1817,4571,6,6,2026-11-14T14:12:46.310-06:00,2026-11-14T14:12:46.691-06:00
+6,10.215.173.1,59944,142.251.210.194,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,pagead2.googlesyndication.com,1891,4530,6,5,2026-11-14T14:12:46.312-06:00,2026-11-14T14:12:46.616-06:00
+6,10.215.173.1,47618,142.251.178.95,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,fonts.googleapis.com,2742,8981,9,6,2026-11-14T14:12:46.313-06:00,2026-11-14T14:12:46.692-06:00
+6,10.215.173.1,54746,142.250.177.65,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,tpc.googlesyndication.com,3916,52735,24,22,2026-11-14T14:12:46.479-06:00,2026-11-14T14:12:46.782-06:00
+6,10.215.173.1,54760,142.250.177.65,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,tpc.googlesyndication.com,1887,4258,6,5,2026-11-14T14:12:46.481-06:00,2026-11-14T14:12:46.687-06:00
+6,10.215.173.1,56932,142.251.210.98,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,www.googletagservices.com,3187,100596,20,30,2026-11-14T14:12:46.488-06:00,2026-11-14T14:12:46.758-06:00
+6,10.215.173.1,59670,35.169.41.224,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,logs.ads.vungle.com,1963,4658,12,13,2026-11-14T14:12:46.489-06:00,2026-11-14T14:12:48.644-06:00
+17,10.215.173.1,51328,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,events.ads.vungle.com,67,195,1,1,2026-11-14T14:12:46.696-06:00,2026-11-14T14:12:46.707-06:00
+17,10.215.173.1,31407,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,fonts.gstatic.com,63,79,1,1,2026-11-14T14:12:46.702-06:00,2026-11-14T14:12:46.709-06:00
+6,10.215.173.1,36818,98.85.176.246,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,events.ads.vungle.com,2247,4517,8,9,2026-11-14T14:12:46.714-06:00,2026-11-14T14:12:46.833-06:00
+6,10.215.173.1,44536,172.217.77.94,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,fonts.gstatic.com,1879,5231,6,5,2026-11-14T14:12:46.715-06:00,2026-11-14T14:12:46.883-06:00
+17,10.215.173.1,55398,142.250.177.65,443,10312,Subway Surf,com.kiloo.subwaysurf,QUIC,Closed,tpc.googlesyndication.com,4358,7780,10,11,2026-11-14T14:12:46.733-06:00,2026-11-14T14:12:46.828-06:00
+17,10.215.173.1,5597,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,www.gstatic.com,61,189,1,1,2026-11-14T14:12:46.754-06:00,2026-11-14T14:12:46.758-06:00
+6,10.215.173.1,56446,142.251.157.120,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,www.gstatic.com,2822,27785,11,11,2026-11-14T14:12:46.764-06:00,2026-11-14T14:12:46.847-06:00
+17,10.215.173.1,34921,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,lh3.googleusercontent.com,71,87,1,1,2026-11-14T14:12:46.766-06:00,2026-11-14T14:12:46.773-06:00
+6,10.215.173.1,55062,142.251.41.129,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,lh3.googleusercontent.com,2901,12732,11,12,2026-11-14T14:12:46.783-06:00,2026-11-14T14:12:46.875-06:00
+17,10.215.173.1,10328,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,hbevents-public.mz.unity3d.com,76,92,1,1,2026-11-14T14:12:46.813-06:00,2026-11-14T14:12:46.818-06:00
+17,10.215.173.1,50838,142.251.210.194,443,10312,Subway Surf,com.kiloo.subwaysurf,QUIC,Closed,pagead2.googlesyndication.com,6478,9846,14,20,2026-11-14T14:12:46.820-06:00,2026-11-14T14:12:46.978-06:00
+6,10.215.173.1,36348,34.54.145.187,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,hbevents-public.mz.unity3d.com,1895,5665,11,10,2026-11-14T14:12:46.822-06:00,2026-11-14T14:12:47.345-06:00
+6,10.215.173.1,40812,142.251.214.66,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,googleads.g.doubleclick.net,3224,1996,8,9,2026-11-14T14:12:46.917-06:00,2026-11-14T14:12:47.017-06:00
+6,10.215.173.1,60290,143.204.204.80,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,o-sdk.mediation.unity3d.com,3160,1106,9,9,2026-11-14T14:12:46.957-06:00,2026-11-14T14:12:47.813-06:00
+17,10.215.173.1,17057,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,vg-aws-cdn-us-east-1b-hb-bid-feedback.mtgglobals.com,98,162,1,1,2026-11-14T14:12:46.962-06:00,2026-11-14T14:12:46.973-06:00
+6,10.215.173.1,54566,143.204.204.129,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,vg-aws-cdn-us-east-1b-hb-bid-feedback.mtgglobals.com,2762,6791,15,16,2026-11-14T14:12:46.977-06:00,2026-11-14T14:13:35.228-06:00
+17,10.215.173.1,31668,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,events.us-east-1.v3.awesomeads.superawesome.tv,92,140,1,1,2026-11-14T14:12:47.048-06:00,2026-11-14T14:12:47.074-06:00
+6,10.215.173.1,60502,98.86.97.193,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,events.us-east-1.v3.awesomeads.superawesome.tv,2042,5792,12,13,2026-11-14T14:12:47.078-06:00,2026-11-14T14:13:07.995-06:00
+17,10.215.173.1,42787,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,et-l.w.inmobi.com,63,239,1,1,2026-11-14T14:12:47.186-06:00,2026-11-14T14:12:47.191-06:00
+6,10.215.173.1,35986,34.4.45.164,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,et-l.w.inmobi.com,1800,8906,12,13,2026-11-14T14:12:47.195-06:00,2026-11-14T14:12:47.303-06:00
+6,10.215.173.1,46014,18.172.134.21,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,o-iab-notifications.mediation.unity3d.com,1777,5792,11,11,2026-11-14T14:12:47.285-06:00,2026-11-14T14:12:48.198-06:00
+6,10.215.173.1,35676,34.54.181.134,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,notifications-gke-sdk-bidding-d.fyber.com,1360,5595,9,8,2026-11-14T14:12:47.345-06:00,2026-11-14T14:12:48.284-06:00
+6,10.215.173.1,36834,98.85.176.246,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,events.ads.vungle.com,2296,4557,9,10,2026-11-14T14:12:47.455-06:00,2026-11-14T14:12:47.588-06:00
+6,10.215.173.1,40822,142.251.214.66,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,googleads.g.doubleclick.net,3352,1956,7,8,2026-11-14T14:12:47.566-06:00,2026-11-14T14:12:47.670-06:00
+6,10.215.173.1,36358,34.54.145.187,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,hbevents-public.mz.unity3d.com,1857,5600,10,9,2026-11-14T14:12:47.666-06:00,2026-11-14T14:12:48.841-06:00
+6,10.215.173.1,36002,34.4.45.164,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,et-l.w.inmobi.com,1697,8786,9,10,2026-11-14T14:12:47.927-06:00,2026-11-14T14:12:48.064-06:00
+17,10.215.173.1,48699,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,w.isx.unity3d.com,63,127,1,1,2026-11-14T14:12:48.035-06:00,2026-11-14T14:12:48.070-06:00
+6,10.215.173.1,41364,13.226.53.105,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,w.isx.unity3d.com,1537,5755,10,10,2026-11-14T14:12:48.088-06:00,2026-11-14T14:13:27.105-06:00
+6,10.215.173.1,46026,18.172.134.21,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,o-iab-notifications.mediation.unity3d.com,1701,1134,9,10,2026-11-14T14:12:48.200-06:00,2026-11-14T14:13:32.157-06:00
+6,10.215.173.1,40830,142.251.214.66,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,googleads.g.doubleclick.net,3273,1766,7,8,2026-11-14T14:12:48.282-06:00,2026-11-14T14:12:48.422-06:00
+17,10.215.173.1,15056,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,notifications-gke-sdk-bidding-b.fyber.com,87,103,1,1,2026-11-14T14:12:48.431-06:00,2026-11-14T14:12:48.445-06:00
+6,10.215.173.1,52964,34.36.143.58,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,notifications-gke-sdk-bidding-b.fyber.com,1387,5642,10,9,2026-11-14T14:12:48.466-06:00,2026-11-14T14:13:35.125-06:00
+6,10.215.173.1,36846,98.85.176.246,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,events.ads.vungle.com,3094,4557,9,10,2026-11-14T14:12:48.845-06:00,2026-11-14T14:12:48.969-06:00
+6,10.215.173.1,36010,34.4.45.164,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,et-l.w.inmobi.com,1669,8746,8,9,2026-11-14T14:12:48.944-06:00,2026-11-14T14:12:49.067-06:00
+17,10.215.173.1,33627,10.215.173.2,53,1000,Android,android,DNS,Closed,dls-udc.dqa.samsung.com,69,85,1,1,2026-11-14T14:12:49.301-06:00,2026-11-14T14:12:49.329-06:00
+6,10.215.173.1,36572,34.120.88.80,443,1000,Android,android,HTTPS,Closed,dls-udc.dqa.samsung.com,18808,8306,10,9,2026-11-14T14:12:49.341-06:00,2026-11-14T14:12:49.793-06:00
+17,10.215.173.1,24244,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,network-check.sybo.net,68,84,1,1,2026-11-14T14:13:03.138-06:00,2026-11-14T14:13:03.188-06:00
+17,10.215.173.1,57165,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,sdk-events.inner-active.mobi,74,90,1,1,2026-11-14T14:13:07.779-06:00,2026-11-14T14:13:07.825-06:00
+6,10.215.173.1,57038,34.160.136.185,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,sdk-events.inner-active.mobi,10301,5848,13,13,2026-11-14T14:13:07.829-06:00,2026-11-14T14:13:35.252-06:00
+6,10.215.173.1,57574,143.204.204.80,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,o-sdk.mediation.unity3d.com,6164,6163,11,12,2026-11-14T14:13:26.982-06:00,2026-11-14T14:13:35.383-06:00
+17,10.215.173.1,14657,10.215.173.2,53,10227,Google Play services,com.google.android.gms,DNS,Closed,spot-pa.googleapis.com,68,196,1,1,2026-11-14T14:13:27.120-06:00,2026-11-14T14:13:27.128-06:00
+17,10.215.173.1,46903,172.217.118.4,443,10227,Google Play services,com.google.android.gms,QUIC,Closed,spot-pa.googleapis.com,53406,7406,52,38,2026-11-14T14:13:27.147-06:00,2026-11-14T14:13:30.570-06:00
+17,10.215.173.1,25612,10.215.173.2,53,10227,Google Play services,com.google.android.gms,DNS,Closed,www.googleapis.com,64,192,1,1,2026-11-14T14:13:27.697-06:00,2026-11-14T14:13:27.710-06:00
+17,10.215.173.1,58391,172.217.115.4,443,10227,Google Play services,com.google.android.gms,QUIC,Closed,www.googleapis.com,7380,79367,43,69,2026-11-14T14:13:27.731-06:00,2026-11-14T14:13:27.939-06:00
+17,10.215.173.1,51342,10.215.173.2,53,10067,Meta Services,com.facebook.services,DNS,Closed,graph.facebook.com,64,116,1,1,2026-11-14T14:13:28.306-06:00,2026-11-14T14:13:28.364-06:00
+6,10.215.173.1,35530,157.240.254.12,443,10067,Meta Services,com.facebook.services,HTTPS,Closed,graph.facebook.com,2184,2436,8,9,2026-11-14T14:13:28.374-06:00,2026-11-14T14:13:28.453-06:00
+6,10.215.173.1,45636,104.18.42.2,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,subway.prod.sybo.net,15672,4350,11,10,2026-11-14T14:13:31.988-06:00,2026-11-14T14:13:36.391-06:00
+17,10.215.173.1,57866,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,o-iab-notifications.mediation.unity3d.com,87,151,1,1,2026-11-14T14:13:35.037-06:00,2026-11-14T14:13:35.061-06:00
+6,10.215.173.1,53406,18.172.134.82,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Error,o-iab-notifications.mediation.unity3d.com,1889,5792,11,11,2026-11-14T14:13:35.064-06:00,2026-11-14T14:13:37.065-06:00
+6,10.215.173.1,53286,173.237.8.132,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,nfflr-us.bidmachine.io,2605,6397,8,7,2026-11-14T14:13:35.069-06:00,2026-11-14T14:13:35.211-06:00
+17,10.215.173.1,9173,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,o-iab-imp-counters.mediation.unity3d.com,86,150,1,1,2026-11-14T14:13:35.134-06:00,2026-11-14T14:13:35.146-06:00
+6,10.215.173.1,36888,18.160.249.93,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,o-iab-imp-counters.mediation.unity3d.com,1784,5712,9,9,2026-11-14T14:13:35.150-06:00,2026-11-14T14:13:35.215-06:00
+17,10.215.173.1,63819,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,pagead2.googleadservices.com,74,90,1,1,2026-11-14T14:13:35.152-06:00,2026-11-14T14:13:35.160-06:00
+6,10.215.173.1,41326,142.250.177.66,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,pagead2.googleadservices.com,3863,4244,8,7,2026-11-14T14:13:35.164-06:00,2026-11-14T14:13:35.415-06:00
+17,10.215.173.1,48292,142.251.210.194,443,10312,Subway Surf,com.kiloo.subwaysurf,QUIC,Closed,pagead2.googlesyndication.com,6709,6383,14,16,2026-11-14T14:13:35.170-06:00,2026-11-14T14:13:35.266-06:00
+17,10.215.173.1,40921,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,network-check.sybo.net,68,84,1,1,2026-11-14T14:13:36.225-06:00,2026-11-14T14:13:36.238-06:00
+17,10.215.173.1,55754,10.215.173.2,53,10312,Subway Surf,com.kiloo.subwaysurf,DNS,Closed,firebaselogging.googleapis.com,76,204,1,1,2026-11-14T14:13:36.938-06:00,2026-11-14T14:13:36.959-06:00
+6,10.215.173.1,42192,172.217.119.4,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,firebaselogging.googleapis.com,1903,4864,8,8,2026-11-14T14:13:36.966-06:00,2026-11-14T14:13:37.065-06:00
+6,10.215.173.1,56808,172.217.117.4,443,10312,Subway Surf,com.kiloo.subwaysurf,HTTPS,Closed,firebaselogging-pa.googleapis.com,2447,4635,7,7,2026-11-14T14:13:37.082-06:00,2026-11-14T14:13:38.931-06:00
+17,10.215.173.1,50086,10.215.173.2,53,1000,Android,android,DNS,Closed,dls.di.atlas.samsung.com,70,108,1,1,2026-11-14T14:13:37.795-06:00,2026-11-14T14:13:37.803-06:00
+6,10.215.173.1,53594,34.107.165.5,443,1000,Android,android,HTTPS,Closed,dls.di.atlas.samsung.com,2367,1228,7,6,2026-11-14T14:13:37.807-06:00,2026-11-14T14:13:38.251-06:00
+17,10.141.233.45,58350,142.250.177.78,443,10229,Google Play Store,com.android.vending,QUIC,Closed,play-fe.googleapis.com,4098,30878,11,32,2026-11-14T14:13:38.239-06:00,2026-11-14T14:13:39.665-06:00
