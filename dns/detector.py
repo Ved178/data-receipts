@@ -81,6 +81,15 @@ def is_infra(name):
     return any(name == s or name.endswith("." + s) for s in INFRA)
 
 
+# Names that can't reach the internet (no data can leave): e.g. Subway Surfers' Moloco SDK tried
+# sdk.moloco.local when its real servers were blocked; the lookup got no answer.
+NON_PUBLIC = ("local", "lan", "home", "internal", "localhost", "invalid", "arpa", "localdomain", "home.arpa")
+
+
+def is_non_public(name):
+    return any(name == s or name.endswith("." + s) for s in NON_PUBLIC)
+
+
 def read_allow(path=ALLOWLIST_PATH):
     out = set()
     try:
@@ -197,7 +206,7 @@ def detect(conn, only_session=None):
                 if d in seen_off:
                     continue
                 names = [q] + chain
-                if company.is_system(q) or company.background(names, app):
+                if is_non_public(q) or company.is_system(q) or company.background(names, app):
                     continue
                 if any(p in allow for p in parents(q)) or L.allowlisted(q):
                     continue
@@ -278,7 +287,12 @@ def main():
     p.add_argument("--dry-run", action="store_true", help="print flags, don't write ml_flags")
     p.add_argument("--loop", type=float, help="run every N seconds")
     a = p.parse_args()
+    me = os.path.abspath(__file__)
+    started = os.path.getmtime(me)
     while True:
+        if a.loop and os.path.getmtime(me) != started:  # code updated: reload without needing sudo
+            print("[detector] code changed, reloading", flush=True)
+            os.execv(sys.executable, [sys.executable, me] + sys.argv[1:])
         t0 = time.time()
         try:
             conn = sqlite3.connect(a.db, timeout=3)
