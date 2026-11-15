@@ -6,7 +6,9 @@
 # Per-board settings (optional) in /etc/digin/board.env, e.g. for board #2:
 #   SSID=DigIn2
 #   AP_MAC=02:12:34:56:78:9b
+#   UPLINK=UWNet        # saved Wi-Fi the box should prefer for its own internet
 # Without that file, box/hotspot.sh runs exactly as Pranshu wrote it (DigIn, ...:9a).
+# Also installs digin-box.service, which runs this script at every boot.
 set -euo pipefail
 [ "$(id -u)" -eq 0 ] || { echo "Run with sudo"; exit 1; }
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
@@ -31,20 +33,30 @@ CONF
 HOT="$REPO/box/hotspot.sh"
 FW="$REPO/box/firewall.sh"; [ -f "$FW" ] || FW="$REPO/box/box/firewall.sh"
 [ -f "$HOT" ] || { echo "Missing $HOT (Pranshu's box/ folder)"; exit 1; }
-SSID=DigIn; AP_MAC=
+SSID=DigIn; AP_MAC=; UPLINK=
 [ -f /etc/digin/board.env ] && . /etc/digin/board.env
+if [ -n "$UPLINK" ]; then   # prefer this Wi-Fi at boot; other saved networks stay as backups
+  nmcli connection modify "$UPLINK" connection.autoconnect-priority 10 || true
+fi
+# At boot the box's own Wi-Fi may still be connecting: wait up to 60 s for internet.
+for _ in $(seq 1 30); do ip route show default | grep -q . && break; sleep 2; done
 mkdir -p "$RUN"
 sed -e "s/^SSID=.*/SSID=${SSID}/" ${AP_MAC:+-e "s/^AP_MAC=.*/AP_MAC=${AP_MAC}/"} "$HOT" > "$RUN/hotspot.sh"
 [ -f "$FW" ] && cp "$FW" "$RUN/firewall.sh"
 chmod +x "$RUN"/*.sh
 "$RUN/hotspot.sh"
 
-# 3. DNS logger + dashboard as services (auto-restart).
-for unit in digin-dns digin-dash; do
-  sed "s#/home/arduino/madhacks26#$REPO#" "$REPO/deploy/$unit.service" > /etc/systemd/system/$unit.service
+# 3. DNS logger + dashboard as services (auto-restart), plus digin-box (this script at boot).
+#    Unit files are rewritten only when they changed, so a boot run never needs daemon-reload.
+changed=0
+for unit in digin-dns digin-dash digin-box; do
+  sed "s#/home/arduino/madhacks26#$REPO#" "$REPO/deploy/$unit.service" > "$RUN/$unit.service"
+  cmp -s "$RUN/$unit.service" /etc/systemd/system/$unit.service || {
+    cp "$RUN/$unit.service" /etc/systemd/system/$unit.service; changed=1; }
 done
-systemctl daemon-reload
-systemctl enable digin-dns digin-dash
+[ "$changed" = 1 ] && systemctl daemon-reload
+systemctl enable --no-reload digin-dns digin-dash digin-box 2>/dev/null
+systemctl reset-failed digin-dns digin-dash 2>/dev/null || true
 systemctl restart digin-dns digin-dash
 sleep 2
 systemctl --no-pager --lines=3 status digin-dns digin-dash || true
