@@ -43,7 +43,7 @@ sqlite3 /tmp/test.db "select domain, round(score,2), reasons from ml_flags order
 `--loop 5` (stop with Ctrl-C). Insert rows into `raw_lookups` from another terminal and new flags
 appear on the next pass.
 
-Other flags: `--threshold 0.8` (lowest score written; 0.8 is the default), `--models <dir>`, `--auto-block`.
+Other flags: `--threshold 0.95` (lowest score written; 0.95 is the default), `--models <dir>`, `--auto-block`.
 
 Check the tests and the held-out numbers:
 
@@ -117,9 +117,9 @@ rules-only baselines catch 0 of 29, since the held-out companies are removed fro
 
 | Threshold | Default harness (141 confirmed content domains, incl. infrastructure) | `--skip-covered` (61 content domains the box would actually score) |
 |---|---|---|
-| 0.7 | caught 18 of 29, 39 false flags, 32% precision | caught 18 of 29 (62%), 2 false, 90% precision |
-| 0.8 | caught 18 of 29, 34 false flags, 35% precision | caught 18 of 29 (62%), 1 false, 95% precision |
-| 0.9 | caught 16 of 29, 28 false flags, 36% precision | caught 16 of 29 (55%), 1 false, 94% precision |
+| 0.7 | (not rerun) | caught 23 of 29 (79%), 2 false, 92% precision |
+| 0.8 | caught 18 of 29, 33 false flags, 35% precision | caught 18 of 29 (62%), 2 false, 90% precision |
+| 0.9 | (not rerun) | caught 15 of 29 (52%), 0 false, 100% precision |
 
 Why two columns: `ml/score.py` never scores a domain that is on a list or allowlist, so the
 right-hand column (`python3 -m ml_eval.evaluate ... --skip-covered`) is what the box does. The
@@ -127,14 +127,24 @@ default column counts allowlisted infrastructure (Akamai, akadns, fbcdn...) as p
 flags. The allowlist is hand-reviewed and parts of it were chosen after seeing results, so treat
 the right-hand column as an upper estimate.
 
-InMobi + Vungle is our best case. Across ten held-out companies (one at a time, same protocol,
-144 tracker domains in total): ranking AUC 0.91 to 1.00; at 0.8 the model catches 99 of 144 (69%)
-with at most 3 false flags per run among 61 content domains (mean precision 84%, lowest 75%); at
-0.9 it catches 82 of 144 (57%) with at most 2 false flags (mean precision 87%, lowest 71%). The sample is small:
-each false flag moves a percentage by several points. Quote counts and the range.
+Across ten held-out companies (one at a time, same protocol, 144 tracker domains in total), with
+the scorer's login and call-server guards applied: at 0.8 the model catches 107 of 144 (74%) with
+at most 2 false flags per run among 61 content domains (mean precision 93%); at 0.9, 86 of 144
+(60%), mean precision 94%; at 0.95, 74 of 144 (51%), mean precision 94% (lowest company 67%).
+These come from data we tuned on, so they are optimistic.
+
+**Fresh test (the honest number).** Three clean box sessions the model never saw (Maps, Spotify,
+Samsung Weather), every flag checked by name: at 0.95 it flags 9 domains, 8 of them real trackers on
+no list (`atmtd.com` x3, `bids.ws`, `ureca-lab.com`, `rapidedge.io`, `weatherfx.com`,
+`em.weather.com`) and 1 false (`api.locketcamera.com`): about 89%. At 0.8 it is about 73% (8 of 11
+judged). The scorer's default threshold is therefore 0.95. The sample is tiny; verdicts should be
+confirmed by a second person.
+
+The scorer never scores login hosts (first-label tokens like `login`, `auth`, `sso`, `accounts`) or
+STUN/TURN call servers, because blocking either breaks the app and the model tends to score them high.
 
 The model is two gradient-boosting models routed by whether a domain has connection data
-(`raw_flows`). A single model had learned "no flow data" as a clue for "content" and missed
+(`raw_flows`), each an average of 15 models fit on resampled data to steady the scores. A single model had learned "no flow data" as a clue for "content" and missed
 trackers seen only in DNS logs; routing fixed that (AUC 0.93 to 0.97 across the ten companies).
 It uses the 13 base features plus 4 timing features. Compare feature groups with
 `python3 tools/ablate.py --db data/sessions/all.db`.
