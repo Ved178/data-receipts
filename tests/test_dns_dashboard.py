@@ -210,6 +210,7 @@ class DetectorTest(unittest.TestCase):
         add(2, 11, "trk.cloakhost.net", '["ads.vungle.com"]')  # CNAME to a known tracker -> flagged, high
         add(2, 12, "kapublicapiprod.azurewebsites.net",        # game's own API on Azure -> never (Knife Hit)
             '["waws-prod-am2-287.westeurope.cloudapp.azure.com"]')
+        add(2, 13, "sdk.moloco.local")                         # can't reach the internet -> never (Subway Surfers)
         conn.commit()
         self.conn = conn
 
