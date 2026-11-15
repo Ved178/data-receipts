@@ -1,0 +1,17 @@
+run4 — Bike Racing (Bike Race by Top Free Games / Wildlife Studios). Shield OFF.
+Device: test phone 10.42.0.33 (Android). Times UTC (board clock = Chicago + 6 h).
+File: run4_bike_racing.log (dnsmasq format, 463 lines)
+
+Marked: START "Bike Racing" 01:28:05 UTC. END not marked; log ends 01:32:31.
+GAP: the file starts at 01:28:26, so the first ~21 s after launch are missing here
+(the launch burst). Pranshu can send that slice separately; it is still in /tmp/digin.log.
+
+Third parties seen: Unity (LevelPlay mediation + Unity Ads), AppLovin, Moloco (+adsmoloco.com),
+InMobi, Mintegral (mtgglobals.com), Singular (attribution), Google (app-measurement.com = Firebase
+Analytics), Facebook (graph/www), Opera Ads (t-odx.op-mobile.opera.com), AppsFlyer OneLink
+(snssdk1233.onelink.me = TikTok's app link, likely an ad click-through at 01:31:03).
+First party: bikerace.com, analytics.wildlifestudios.com, dynamodb.us-east-1.amazonaws.com (game backend).
+
+Noise to ignore: ~01:31:03-01:31:05 Chrome opened (clients2/clients4.google.com, accounts.google.com,
+optimizationguide-pa, memex-pa, update.googleapis.com) - probably from tapping an ad.
+www.google.com every ~30-60 s = Android connectivity check.

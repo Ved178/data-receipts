@@ -7,6 +7,7 @@
 #   SSID=DigIn2
 #   AP_MAC=02:12:34:56:78:9b
 #   UPLINK=UWNet        # saved Wi-Fi the box should prefer for its own internet
+#   FLOWS=off           # don't run digin-flows (tcpdump capture)
 # Without that file, box/hotspot.sh runs exactly as Pranshu wrote it (DigIn, ...:9a).
 # Also installs digin-box.service, which runs this script at every boot.
 set -euo pipefail
@@ -46,19 +47,24 @@ sed -e "s/^SSID=.*/SSID=${SSID}/" ${AP_MAC:+-e "s/^AP_MAC=.*/AP_MAC=${AP_MAC}/"}
 chmod +x "$RUN"/*.sh
 "$RUN/hotspot.sh"
 
-# 3. DNS logger + dashboard as services (auto-restart), plus digin-box (this script at boot).
+# 3. DNS logger, dashboard, both detectors (+ flows) as services (auto-restart), plus digin-box (this script at boot).
 #    Unit files are rewritten only when they changed, so a boot run never needs daemon-reload.
 changed=0
-for unit in digin-dns digin-dash digin-detector digin-box; do
+# Both detectors run side by side (rules-v1 = digin-detector, ml-v1 = digin-ml). Flows (Pranshu's
+# tcpdump capture, fills raw_flows) is optional: on only if tcpdump exists and FLOWS!=off in board.env.
+UNITS="digin-dns digin-dash digin-detector digin-ml"
+if [ "${FLOWS:-on}" != off ] && command -v tcpdump >/dev/null; then UNITS="$UNITS digin-flows"
+else systemctl disable --now digin-flows 2>/dev/null || true; fi
+for unit in $UNITS digin-box; do
   sed "s#/home/arduino/madhacks26#$REPO#" "$REPO/deploy/$unit.service" > "$RUN/$unit.service"
   cmp -s "$RUN/$unit.service" /etc/systemd/system/$unit.service || {
     cp "$RUN/$unit.service" /etc/systemd/system/$unit.service; changed=1; }
 done
 # enable first, then reload: enabling adds links that systemd would otherwise report as "changed on disk"
-systemctl enable --no-reload digin-dns digin-dash digin-detector digin-box 2>/dev/null
+systemctl enable --no-reload $UNITS digin-box 2>/dev/null
 [ "$changed" = 1 ] && systemctl daemon-reload
-systemctl reset-failed digin-dns digin-dash digin-detector 2>/dev/null || true
-systemctl restart digin-dns digin-dash digin-detector
+systemctl reset-failed $UNITS 2>/dev/null || true
+systemctl restart $UNITS
 sleep 2
-systemctl --no-pager --lines=3 status digin-dns digin-dash digin-detector || true
+systemctl --no-pager --lines=3 status $UNITS || true
 echo "Box up on $SSID. Dashboard: http://10.42.0.1   Watch lookups: python3 $REPO/dns/digin_dns.py tail"

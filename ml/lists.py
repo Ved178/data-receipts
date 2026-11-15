@@ -110,6 +110,19 @@ ALLOWLIST = {
 }
 
 
+def _read_suffix_file(path):
+    try:
+        with open(path) as f:
+            return {ln.strip().lower() for ln in f if ln.strip() and not ln.startswith("#")}
+    except OSError:
+        return set()
+
+
+# Extra infrastructure suffixes kept in a data file so they can grow without code edits.
+for _f in ("allowlist_trackerradar.txt", "infrastructure_allowlist.txt"):
+    ALLOWLIST |= _read_suffix_file(os.path.join(DATA, _f))
+
+
 def norm(s):
     return re.sub(r"[^a-z0-9]", "", (s or "").lower())
 

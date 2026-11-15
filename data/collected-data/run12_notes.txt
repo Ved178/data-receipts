@@ -1,0 +1,13 @@
+run12 — Snapchat (PARTIAL). Shield OFF, test phone 10.42.0.33 (Android).
+Times UTC (board clock = Chicago + 6 h). File: run12_snapchat_partial.log (02:13:55 - 02:15:07)
+WARNING: copied from the live window, which started mid-launch; most of Snapchat's launch lookups
+are missing. ~70 s of data.
+
+Snapchat (first party): *.api.snapchat.com -> CNAME *.api.sc-gw.com (Snap's own gateway domain),
+bolt-gcdn.sc-cdn.net and cf-st.sc-cdn.net (Snap CDN). From earlier sessions Snapchat also calls
+app-analytics-v2.snapchat.com (its own analytics) every few minutes in the background.
+Example of first-party CNAME to a differently named domain owned by the SAME company
+(snapchat.com -> sc-gw.com): should NOT be flagged as a tracker.
+
+Noise to ignore: Facebook/Instagram 02:14:11-02:14:35 (Instagram app in background),
+mobileconfiguration-pa.googleapis.com, www.google.com connectivity check.

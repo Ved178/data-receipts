@@ -6,7 +6,7 @@ dashboard/app.py - Data Receipt dashboard (owner: Aarav). Stdlib only, works off
   python3 dashboard/app.py --port 8080 --db /tmp/seed.db   # laptop testing
 
 Reads digin.db (frozen schema, db/schema.sql). Endpoints:
-  GET  /                 the page
+  GET  /  and  /story    the two pages (dashboard/static/*.html; their css/js under /static/)
   GET  /api/state?session=<id>   receipt, totals, recent lookups, sessions, shield
   GET  /api/web          Tracker Web: which companies appear in which apps
   GET  /api/flags        ml_flags (Suspected trackers)
@@ -75,6 +75,10 @@ def set_setting(key, value):
 def flags_map(conn):
     out = {}
     for r in conn.execute("SELECT * FROM ml_flags"):
+        # The ML model's "Possible" tier (score below 0.95) is hidden everywhere; the rules
+        # detector's flags and anything a person blocked always show.
+        if r["model_version"] != "rules-v1" and r["score"] < 0.95 and r["status"] != "auto_blocked":
+            continue
         try:
             reasons = json.loads(r["reasons"])
         except (TypeError, ValueError):
@@ -224,7 +228,8 @@ def state(session_param):
     recent = []
     for r in list(rows)[-15:][::-1]:
         bg = company.background([r["qname"]] + chain_list(r["cname_chain"]), app)
-        recent.append({"ts": r["ts"], "qname": r["qname"], "blocked": r["block_reason"],
+        recent.append({"ts": r["ts"], "qname": r["qname"],
+                       "blocked": r["block_reason"] or ("list" if r["blocked"] else None),
                        "tracker": (not bg) and is_tracking(classify(r["qname"], flags, r["cname_chain"]))})
     return {
         "shield": setting(conn, "shield", "off"),
@@ -384,6 +389,10 @@ def health():
             "db_bytes": os.path.getsize(DB) if os.path.exists(DB) else 0, "cpu_temp_c": temp}
 
 
+STATIC_TYPES = {".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8",
+                ".js": "text/javascript; charset=utf-8", ".svg": "image/svg+xml"}
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
@@ -396,6 +405,22 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def send_static(self, rel):
+        """A file under dashboard/static (the pages, css/, js/). Nothing outside that folder."""
+        root = os.path.realpath(os.path.join(HERE, "static"))
+        path = os.path.realpath(os.path.join(root, rel))
+        ctype = STATIC_TYPES.get(os.path.splitext(path)[1])
+        if not path.startswith(root + os.sep) or ctype is None or not os.path.isfile(path):
+            return self.send_json({"error": "not found"}, 404)
+        with open(path, "rb") as f:
+            data = f.read()
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Cache-Control", "no-cache")  # a redeploy shows up on the next reload
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
 
     def body(self):
         n = int(self.headers.get("Content-Length") or 0)
@@ -411,14 +436,9 @@ class Handler(BaseHTTPRequestHandler):
             company.set_holdout(holdout.split(","))
             q = parse_qs(u.query)
             if u.path in ("/", "/index.html", "/story", "/story.html"):
-                name = "story.html" if u.path.startswith("/story") else "index.html"
-                with open(os.path.join(HERE, "static", name), "rb") as f:
-                    page = f.read()
-                self.send_response(200)
-                self.send_header("Content-Type", "text/html; charset=utf-8")
-                self.send_header("Content-Length", str(len(page)))
-                self.end_headers()
-                self.wfile.write(page)
+                self.send_static("story.html" if u.path.startswith("/story") else "index.html")
+            elif u.path.startswith("/static/"):
+                self.send_static(u.path[len("/static/"):])
             elif u.path == "/api/state":
                 self.send_json(state(parse_qs(u.query).get("session", ["current"])[0]))
             elif u.path == "/api/web":

@@ -1,0 +1,16 @@
+[Unit]
+Description=DigIn connection logger: per-connection byte counts into raw_flows (Pranshu, box/flows.py)
+After=digin-dns.service
+# ap0 may not exist yet at boot; keep retrying until digin-box.service brings the hotspot up.
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Environment=PYTHONDONTWRITEBYTECODE=1
+UMask=0000
+ExecStart=/usr/bin/python3 /home/arduino/madhacks26/box/flows.py --db /home/arduino/digin/digin.db --iface ap0
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
