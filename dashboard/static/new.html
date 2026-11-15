@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DigIn · Data Receipt</title>
+<link rel="stylesheet" href="/static/css/new.css">
+</head>
+<body>
+<header class="hero">
+  <div class="brand">DIGIN<small>Data Receipt · let's dig in</small></div>
+  <h1>See every company your apps share your data with. <em>Block them.</em> <strong>Catch the hidden ones.</strong></h1>
+  <div class="now">
+    <span id="live" class="live"><i></i><b>LIVE</b></span>
+    <span class="app" id="app-name">…</span>
+    <span class="meta" id="app-meta"></span>
+  </div>
+  <div class="session">
+    <input id="app" placeholder="App to test, e.g. Block Blast" list="apps">
+    <datalist id="apps"><option>Block Blast</option><option>Subway Surfers</option><option>Knife hit</option></datalist>
+    <button id="start">Start</button><button id="end" class="ghost">End</button>
+  </div>
+</header>
+
+<main>
+  <section class="step" id="see">
+    <div class="step-head"><span class="n">1</span><div><h2>See</h2><p>Every company this app talked to, and what they usually get.</p></div></div>
+    <div class="see">
+      <div class="receipt" id="receipt"></div>
+      <div class="big-stats">
+        <div class="bs red"><b id="s-companies">0</b><span>companies this app shared data with</span></div>
+        <div class="bs"><b id="s-lookups">0</b><span>times the app reached out</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="step" id="block">
+    <div class="step-head"><span class="n">2</span><div><h2>Block</h2><p>One switch cuts the trackers off. Your app keeps working.</p></div></div>
+    <div class="shield-row">
+      <button id="shield" class="shield off" aria-pressed="false"><span class="knob"></span><span class="lbl">SHIELD OFF</span></button>
+      <div class="bs green"><b id="s-blocked">0</b><span>companies blocked by Shield</span></div>
+      <div class="works" id="works">Shield only blocks trackers, never the app's own servers.</div>
+    </div>
+  </section>
+
+  <section class="step" id="catch">
+    <div class="step-head"><span class="n">3</span><div><h2>Catch</h2><p>Hidden trackers that aren't on our blocklists, flagged from how they behave. High confidence only.</p></div></div>
+    <div id="caught"></div>
+  </section>
+
+  <section class="step" id="why">
+    <div class="step-head"><span class="n">?</span><div><h2>Why this isn't a VPN or an ad blocker</h2></div></div>
+    <div class="why">
+      <div class="col"><h3>VPN</h3><p>Hides your traffic from your Wi-Fi or internet provider. But your apps still send your data to the same companies.</p></div>
+      <div class="col"><h3>List-based blockers</h3><p>Block domains already on a list. Anything new or renamed, that no list names yet, gets through.</p></div>
+      <div class="col us"><h3>DigIn</h3><p>Shows each app's receipt, blocks the trackers, and flags unknown ones from how they behave. On the box, no cloud.</p></div>
+    </div>
+  </section>
+
+  <section class="step" id="web-step">
+    <div class="step-head"><span class="n">4</span><div><h2>The same companies inside every app</h2><p>Each line: a company that showed up inside that app.</p></div></div>
+    <div id="web"></div>
+  </section>
+
+  <a class="story-btn" href="/story">See the Shield story: what happens when you block them →</a>
+
+  <details class="tech">
+    <summary>Show technical details</summary>
+    <div class="feed" id="feed"></div>
+  </details>
+</main>
+<footer>We see who was contacted, never what was sent. Everything runs on the box. <span id="conn" class="conn"><i></i><span>connecting…</span></span></footer>
+<script type="module" src="/static/js/new.js"></script>
+</body>
+</html>
