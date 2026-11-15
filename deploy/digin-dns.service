@@ -1,0 +1,15 @@
+[Unit]
+Description=DigIn DNS logger + Shield (Data Receipt)
+After=network-online.target NetworkManager.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=DIGIN_DB=/home/arduino/digin/digin.db
+ExecStart=/usr/bin/python3 /home/arduino/madhacks26/dns/digin_dns.py serve --listen 10.42.0.1
+UMask=0000
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,42 @@
+# Known trackers for Shield when ml/lists.py is not available. One domain per line.
+# Parents match subdomains: vungle.com also blocks ads.vungle.com.
+# From tools/receipt_test.py EXTRA + domains seen in the Block Blast test.
+adjust.com
+app-measurement.com
+applovin.com
+applvn.com
+appsflyer.com
+bidmachine.io
+branch.io
+chartboost.com
+crashlytics.com
+doubleclick.net
+firebaselogging-pa.googleapis.com
+firebaselogging.googleapis.com
+fyber.com
+googleadservices.com
+googlesyndication.com
+googletagservices.com
+graph.facebook.com
+helpshift.com
+inmobi.com
+inner-active.mobi
+ironsrc.mobi
+kwcdn.com
+moloco.com
+mtgglobals.com
+pangle.io
+pangleglobal.com
+superawesome.tv
+supersonicads.com
+unity3d.com
+unityads.unity3d.com
+vungle.com
+adsmoloco.com
+liftoff-creatives.io
+doubleverify.com
+dv.tech
+amazon-adsystem.com
+app-analytics-services.com
+safedk.com
+appsflyersdk.com

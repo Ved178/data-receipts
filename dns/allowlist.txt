@@ -1,0 +1,15 @@
+# Never blocked by Shield (CDNs, phone system services, captive-portal checks).
+connectivitycheck.gstatic.com
+connectivitycheck.android.com
+clients3.google.com
+captive.apple.com
+time.apple.com
+time.android.com
+mtalk.google.com
+play.googleapis.com
+android.clients.google.com
+push.apple.com
+gstatic.com
+cloudfront.net
+akamaized.net
+fastly.net
