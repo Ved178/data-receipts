@@ -1,0 +1,14 @@
+run10 — Instagram (PARTIAL). Shield OFF, test phone 10.42.0.33 (Android).
+Times UTC (board clock = Chicago + 6 h). File: run10_instagram_partial.log (02:04:19 - 02:07:57)
+WARNING: copied from the live window after Instagram had already loaded. The launch, login,
+feed and ad lookups happened before 02:04:19 and are NOT in this file. Treat as incomplete.
+Instagram also reuses open connections, so few new lookups appear once it is running.
+
+Instagram / Meta seen: scontent-ord5-1.cdninstagram.com (images), edge-mqtt.facebook.com
+(live messaging), 154d3ba3-...-netseer-ipaddr-assoc.xz/xy.fbcdn.net.
+Notable: the netseer-ipaddr-assoc name carries a long unique ID inside the hostname and
+appears to associate that ID with the phone's IP address (sent in plain DNS). Not yet confirmed
+whether the ID is per-device (needs a second phone).
+
+Noise to ignore: WhatsApp 02:04:34, Firebase logging 02:05:11, Snapchat 02:06:22-02:06:23,
+Samsung cloud 02:06:23, www.google.com connectivity checks.

@@ -120,17 +120,27 @@ def available_scorers():
     return out
 
 
-def evaluate(conn, holdout, negatives, threshold=0.5, scorers=None):
+def evaluate(conn, holdout, negatives, threshold=0.5, scorers=None, skip_covered=False):
     L = lists_mod.load(exclude_companies=holdout)
     seen, pos_by_co, neg = ground_truth(conn, holdout, negatives)
+    n_skipped = 0
+    if skip_covered:
+        # ml/score.py never scores a domain that is on any list or allowlist, so counting such
+        # domains as possible false flags measures something the box never does.
+        kept = [d for d in neg if not L.is_known(d)]
+        n_skipped, neg = len(neg) - len(kept), kept
     pos = sorted({d for v in pos_by_co.values() for d in v})
     other = [d for d in seen if d not in set(pos) | set(neg) and not L.is_known(d)]
     res = {"holdout": holdout, "threshold": threshold, "n_seen": len(seen),
            "positives": {c: len(v) for c, v in pos_by_co.items()}, "n_neg": len(neg),
-           "n_other": len(other), "leaks": leak_check(conn, L, pos), "scorers": []}
+           "n_skipped_covered": n_skipped, "n_other": len(other), "leaks": leak_check(conn, L, pos), "scorers": []}
     for name, fn in scorers or available_scorers():
         scores = fn(conn, L, seen)
         flagged = {d for d, s in scores.items() if s >= threshold}
+        if skip_covered:
+            # same guards as ml/score.py: login hosts and STUN/TURN servers are never scored on the box
+            from ml.score import is_auth_endpoint, is_call_infra
+            flagged = {d for d in flagged if not (is_auth_endpoint(d) or is_call_infra(d))}
         tp = sorted(d for d in pos if d in flagged)
         fp = sorted(d for d in neg if d in flagged)
         fo = sorted(d for d in other if d in flagged)
@@ -211,6 +221,10 @@ def main(argv=None):
     ap.add_argument("--threshold", type=float, default=0.5)
     ap.add_argument("--negatives", default=NEG_PATH)
     ap.add_argument("--note", default="")
+    ap.add_argument("--skip-covered", action="store_true",
+                    help="production view: drop content negatives already on a list/allowlist "
+                         "(the box never scores them) and apply ml/score.py's login/call-server "
+                         "guards. Default off.")
     ap.add_argument("--no-write", action="store_true")
     ap.add_argument("--suggest-negatives", action="store_true")
     a = ap.parse_args(argv)
@@ -222,9 +236,12 @@ def main(argv=None):
         ap.error("give at least one --holdout company")
     neg = load_negatives(a.negatives)
     runs = [a.holdout] + ([[c] for c in a.holdout] if a.folds and len(a.holdout) > 1 else [])
-    results = [evaluate(conn, h, neg, a.threshold) for h in runs]
+    results = [evaluate(conn, h, neg, a.threshold, skip_covered=a.skip_covered) for h in runs]
     for r in results:
         print(table(r) + "\n")
+        if a.skip_covered:
+            print(f"(production view: skipped {r['n_skipped_covered']} content domains already on a "
+                  f"list or allowlist; they are never scored by ml/score.py)\n")
     print(json.dumps([{k: v for k, v in r.items() if k != "scorers"} for r in results], indent=1))
     if not a.no_write:
         write_results(results, a.db, a.note)
