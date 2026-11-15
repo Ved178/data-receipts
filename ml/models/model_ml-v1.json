@@ -13,10 +13,14 @@
   "flow_interval_cv",
   "name_ad_tokens",
   "ip_generic_infra",
-  "own_app_domain"
+  "own_app_domain",
+  "first_contact_delay",
+  "burst_size",
+  "lookups_per_min",
+  "idle_refire"
  ],
  "heldout": [],
  "n_pos": 426,
- "n_neg": 140,
- "trained": "2026-11-15T01:54:37"
+ "n_neg": 141,
+ "trained": "2026-11-15T02:48:47"
 }

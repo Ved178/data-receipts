@@ -13,6 +13,7 @@ Rules (CLAUDE.md §7 / handoff §5):
 import argparse
 import glob
 import json
+import re
 import os
 import sqlite3
 import sys
@@ -50,10 +51,19 @@ def current_app(conn):
     return row[0] if row else None
 
 
+_CALL_INFRA = re.compile(r"^(stun|turn|turns)\d*$")
+
+
+def is_call_infra(name):
+    """STUN/TURN servers set up voice and video calls. They look chatty and periodic, so a
+    model can mistake them for trackers, but blocking them breaks calling: never score them."""
+    return bool(_CALL_INFRA.match((name or "").split(".")[0]))
+
+
 def score_domains(conn, L, model):
     """{domain: (score, features)} for unlisted, non-allowlisted domains."""
     F = feat.build(conn, L)
-    cand = [d for d in F if not L.is_known(d) and not L.is_allowlisted(d)]
+    cand = [d for d in F if not L.is_known(d) and not L.is_allowlisted(d) and not is_call_infra(d)]
     if not cand:
         return {}
     probs = model.predict_proba(feat.matrix(F, cand))[:, 1]
@@ -78,9 +88,9 @@ def write_flags(conn, L, scored, version, threshold=FLAG_THRESHOLD,
             why = reasons_mod.dumps(reasons_mod.explain(dom, f, det))
             auto = auto_threshold is not None and score >= auto_threshold and not L.same_company(dom, app) \
                 and not L.is_allowlisted(dom)
+            # A row's status is never demoted here: the dashboard's Block button sets
+            # 'auto_blocked' and Shield reads it, so a person's choice must survive every pass.
             status = "auto_blocked" if auto else (row[0] if row else "suspected")
-            if row and row[0] == "auto_blocked" and not auto:
-                status = "suspected"
             conn.execute(
                 "INSERT INTO ml_flags(domain, score, reasons, status, model_version, "
                 "flagged_ts, updated_ts) VALUES (?,?,?,?,?,?,?) ON CONFLICT(domain) DO UPDATE "
