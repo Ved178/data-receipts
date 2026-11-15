@@ -7,6 +7,61 @@ each with a plain-English reason. The team brief is in [`CLAUDE.md`](CLAUDE.md).
 Everything meets in one SQLite file, `digin.db` (schema in `db/schema.sql`). The ML part reads
 `raw_lookups`, `raw_flows` and `sessions`, and writes `ml_flags`.
 
+## Run the whole box with Docker (Uno Q)
+
+The five services (DNS logger + Shield, dashboard, rules-v1 detector, ml-v1 scorer, flows) run
+as containers from one arm64 image. The hotspot, firewall and DNS hand-off stay on the host, as
+before. The dashboard is reachable **only on DigIn** (`http://10.42.0.1`), never on the venue
+network. Details and troubleshooting: [`docker/README.md`](docker/README.md).
+
+**1. Build the image on your laptop** (Apple-Silicon Mac builds arm64 natively, ~30 s):
+```bash
+docker buildx build --platform linux/arm64 -f docker/Dockerfile -t digin:latest --load .
+docker save digin:latest | gzip -1 > digin-arm64.tar.gz          # ~135 MB
+```
+
+**2. Copy the image and the repo to the board** (while online; the demo runs offline):
+```bash
+scp digin-arm64.tar.gz arduino@<board address>:/home/arduino/
+scp -r ../madhacks26 arduino@<board address>:/home/arduino/      # or adb push
+```
+
+**3. On the board, check Docker and load the image:**
+```bash
+docker version; docker compose version     # engine 25+; if compose is missing:
+                                           # sudo apt-get install docker-compose-plugin
+docker load < ~/digin-arm64.tar.gz
+```
+(If `docker` says "permission denied", put `sudo` in front, or run `sudo usermod -aG docker arduino` once and log in again.)
+
+**4. Optional per-board settings** in `/etc/digin/board.env` (same as `start_box.sh`):
+```bash
+sudo mkdir -p /etc/digin
+echo 'UPLINK=UWNet' | sudo tee /etc/digin/board.env    # also: SSID=, AP_MAC=, FLOWS=off
+```
+
+**5. Start everything (one command):**
+```bash
+cd /home/arduino/madhacks26 && sudo deploy/start_box_docker.sh
+```
+This brings up the DigIn hotspot and firewall and starts the containers. It also installs
+`digin-box-docker.service`, so the box comes back by itself after every reboot. It disables the
+systemd path (`digin-box`, `digin-dns`, ...) so only one copy owns ports 53 and 80.
+
+**6. Check it:** join **DigIn** on a phone (mobile data off) and open `http://10.42.0.1`.
+```bash
+docker compose ps                         # dns should be "healthy"
+docker compose logs -f dns                # live lookups (or: dash, ml, detector, flows)
+docker exec digin-dns python dns/digin_dns.py session start "Block Blast"   # CLI: start / end / shield on|off
+```
+
+| Need | Command |
+|---|---|
+| Emergency: plain dnsmasq, no logging | `sudo deploy/start_box_docker.sh fallback` |
+| Back to normal | `sudo deploy/start_box_docker.sh` |
+| Ship a code change | rebuild (step 1, only the code layer changes), copy, `docker load`, `docker compose up -d` |
+| Back to the systemd path | `sudo systemctl disable digin-box-docker; docker compose down; sudo deploy/start_box.sh` |
+
 ## ML scorer (`ml/`)
 
 `ml/score.py` scores every domain that is on no list and writes the suspicious ones to

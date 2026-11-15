@@ -1,0 +1,16 @@
+[Unit]
+Description=DigIn box at boot (Docker): hotspot + firewall on host, services in containers
+After=NetworkManager.service docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/home/arduino/madhacks26/deploy/start_box_docker.sh
+TimeoutStartSec=180
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

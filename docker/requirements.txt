@@ -1,0 +1,6 @@
+# Pinned to what board #2 runs (deploy/SETUP_BOARD.md §3). model_ml-v1.joblib was pickled with
+# scikit-learn 1.9.1: a different version may refuse to load it or score it differently.
+dnslib
+scikit-learn==1.9.1
+joblib==1.6.0
+maxminddb
