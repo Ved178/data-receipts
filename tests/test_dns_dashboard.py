@@ -118,6 +118,34 @@ class DashboardTest(unittest.TestCase):
         self.assertTrue(companies, "receipt should name at least one company")
         self.assertIn(s["shield"], ("on", "off"))
 
+    def test_classify_by_function_not_owner(self):
+        # Amazon owns both; its ad servers are Advertising, its shop is not.
+        self.assertEqual(self.app.classify("aax.advertising.a2z.com", {}), ("Amazon", "Advertising"))
+        self.assertEqual(self.app.classify("c.amazon-adsystem.com", {}), ("Amazon", "Advertising"))
+        self.assertEqual(self.app.classify("ad-host-backup-america.oss-us-west-1.aliyuncs.com", {})[1], "Advertising")
+
+    def test_cname_to_cloud_host_is_not_ownership(self):
+        self.assertIsNone(self.app.classify("thinkingdata.cn", {}, '["alb-x.cn-shanghai.alb.aliyuncs.com"]'))
+        self.assertEqual(self.app.classify("dvrtr.innovid.com", {}, '["vast.doubleverify.com"]')[0], "Innovid")
+
+    def test_readable_company_names(self):
+        self.assertEqual(self.app.classify("cdn.jsdelivr.net", {})[0], "jsDelivr (code CDN)")
+
+    def test_background_apps_not_counted(self):
+        import company
+        self.assertEqual(company.background(["gateway.icloud.com"], "Block Blast"), "Apple / iCloud")
+        self.assertEqual(company.background(["g.whatsapp.net"], "Block Blast"), "WhatsApp")
+        self.assertIsNone(company.background(["aws.api.snapchat.com"], "Snapchat"))  # the tested app itself
+        self.assertIsNone(company.background(["ads.vungle.com"], "Block Blast"))
+        conn = sqlite3.connect(self.db)
+        sid = conn.execute("SELECT session_id FROM sessions LIMIT 1").fetchone()[0]
+        conn.execute("INSERT INTO raw_lookups(ts, device, session_id, qname) VALUES (?,?,?,?)",
+                     (time.time(), "10.42.0.9", sid, "g.whatsapp.net"))
+        conn.commit()
+        s = self.app.state(str(sid))
+        self.assertIn("WhatsApp", [b["label"] for b in s["background"]])
+        self.assertNotIn("WhatsApp", [c["company"] for g in s["receipt"] for c in g["companies"]])
+
     def test_tracker_web_and_flags_load(self):
         web = self.app.tracker_web()
         self.assertIn("edges", web)

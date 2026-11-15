@@ -86,20 +86,34 @@ def flags_map(conn):
 
 
 def classify(qname, flags, chain=None):
-    """-> (company, category) | (domain, 'Suspected') | None. Also uncloaks CNAME chains."""
+    """-> (company, category) | (domain, 'Suspected') | None. Also uncloaks CNAME chains.
+    The category follows what the domain does: an ad server is Advertising even when its owner
+    is filed under Content (e.g. Amazon)."""
     if company.is_system(qname):
         return None
+    chain = chain_list(chain)
+    names = [qname] + chain
     hit = company.company_for(qname)
     if hit:
-        return hit
-    for target in chain_list(chain):
+        return (company.display(hit[0]), company.by_function(names, hit[1]))
+    # CNAME uncloaking: only a trail that ends at a TRACKER changes who we credit. A trail to a
+    # cloud host (thinkingdata.cn -> Alibaba load balancer) must not relabel the domain as the host.
+    for target in chain:
         hit = company.company_for(target)
-        if hit:
-            return (hit[0], hit[1])
+        if hit and hit[1] in TRACKING:
+            return (company.display(hit[0]), hit[1])
     f = flags.get(qname)
     if f and f["status"] in ("suspected", "auto_blocked"):
         return (qname, "Suspected")
     return None
+
+
+TRACKING = ("Advertising", "Analytics", "Social", "FingerprintingInvasive", "FingerprintingGeneral",
+            "Suspected", "Cryptomining")
+
+
+def is_tracking(hit):
+    return bool(hit) and hit[1] in TRACKING
 
 
 def chain_list(chain):
@@ -130,38 +144,50 @@ def state(session_param):
                             " ORDER BY id").fetchall()
 
     flags = flags_map(conn)
-    companies = {}
+    app = sel["app_name"] if sel else None
+    entries = {}          # (company, category) -> row: a company can sit in two categories (Amazon ads + shop)
     unknown = defaultdict(int)
+    background = defaultdict(lambda: {"hits": 0, "domains": set()})
     blocked_lookups = 0
     for r in rows:
         q = r["qname"]
         if r["blocked"]:
             blocked_lookups += 1
+        bg = company.background([q] + chain_list(r["cname_chain"]), app)
+        if bg:
+            background[bg]["hits"] += 1
+            background[bg]["domains"].add(q)
+            continue
         hit = classify(q, flags, r["cname_chain"])
         if not hit:
             if not company.is_system(q):
                 unknown[q] += 1
             continue
         co, cat = hit
-        c = companies.setdefault(co, {"company": co, "category": cat, "hits": 0, "blocked": 0, "domains": set()})
+        c = entries.setdefault((co, cat), {"company": co, "category": cat, "hits": 0, "blocked": 0, "domains": set()})
         c["hits"] += 1
         c["blocked"] += 1 if r["blocked"] else 0
         c["domains"].add(q)
 
     groups = defaultdict(list)
-    for c in companies.values():
+    for c in entries.values():
         c["domains"] = sorted(c["domains"])
         groups[c["category"]].append(c)
     receipt = []
     for cat, items in sorted(groups.items(), key=lambda kv: -sum(i["hits"] for i in kv[1])):
         items.sort(key=lambda i: -i["hits"])
         receipt.append({"category": cat, "note": WHAT_THEY_GET.get(cat, ""), "companies": items})
+    companies = {c["company"] for c in entries.values()}
+    companies_blocked = {c["company"] for c in entries.values() if c["blocked"]}
 
     duration = None
     if sel:
         duration = (sel["end_ts"] or time.time()) - sel["start_ts"]
-    recent = [{"ts": r["ts"], "qname": r["qname"], "blocked": r["block_reason"],
-               "tracker": bool(classify(r["qname"], flags, r["cname_chain"]))} for r in list(rows)[-15:]][::-1]
+    recent = []
+    for r in list(rows)[-15:][::-1]:
+        bg = company.background([r["qname"]] + chain_list(r["cname_chain"]), app)
+        recent.append({"ts": r["ts"], "qname": r["qname"], "blocked": r["block_reason"],
+                       "tracker": (not bg) and is_tracking(classify(r["qname"], flags, r["cname_chain"]))})
     return {
         "shield": setting(conn, "shield", "off"),
         "selected_app": setting(conn, "selected_app", ""),
@@ -171,8 +197,11 @@ def state(session_param):
         "duration_s": duration,
         "totals": {"lookups": len(rows), "domains": len({r["qname"] for r in rows}),
                    "companies": len(companies), "blocked_lookups": blocked_lookups,
-                   "companies_blocked": sum(1 for c in companies.values() if c["blocked"])},
+                   "companies_blocked": len(companies_blocked),
+                   "background_lookups": sum(b["hits"] for b in background.values())},
         "receipt": receipt,
+        "background": [{"label": k, "hits": v["hits"], "domains": sorted(v["domains"])}
+                       for k, v in sorted(background.items(), key=lambda kv: -kv[1]["hits"])],
         "unknown": sorted(unknown.items(), key=lambda kv: -kv[1])[:12],
         "recent": recent,
         "server_ts": time.time(),
@@ -185,8 +214,11 @@ def tracker_web():
     apps = {r["session_id"]: r["app_name"] for r in conn.execute("SELECT session_id, app_name FROM sessions")}
     edges = defaultdict(int)
     for r in conn.execute("SELECT session_id, qname, cname_chain FROM raw_lookups WHERE session_id IS NOT NULL"):
+        if r["session_id"] not in apps or company.background(
+                [r["qname"]] + chain_list(r["cname_chain"]), apps[r["session_id"]]):
+            continue
         hit = classify(r["qname"], flags, r["cname_chain"])
-        if hit and r["session_id"] in apps:
+        if hit:
             edges[(apps[r["session_id"]], hit[0], hit[1])] += 1
     by_company = defaultdict(set)
     for (app, co, _), _n in edges.items():
