@@ -54,8 +54,9 @@ for unit in digin-dns digin-dash digin-detector digin-box; do
   cmp -s "$RUN/$unit.service" /etc/systemd/system/$unit.service || {
     cp "$RUN/$unit.service" /etc/systemd/system/$unit.service; changed=1; }
 done
-[ "$changed" = 1 ] && systemctl daemon-reload
+# enable first, then reload: enabling adds links that systemd would otherwise report as "changed on disk"
 systemctl enable --no-reload digin-dns digin-dash digin-detector digin-box 2>/dev/null
+[ "$changed" = 1 ] && systemctl daemon-reload
 systemctl reset-failed digin-dns digin-dash digin-detector 2>/dev/null || true
 systemctl restart digin-dns digin-dash digin-detector
 sleep 2
