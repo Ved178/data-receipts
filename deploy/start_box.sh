@@ -49,16 +49,16 @@ chmod +x "$RUN"/*.sh
 # 3. DNS logger + dashboard as services (auto-restart), plus digin-box (this script at boot).
 #    Unit files are rewritten only when they changed, so a boot run never needs daemon-reload.
 changed=0
-for unit in digin-dns digin-dash digin-detector digin-box; do
+for unit in digin-dns digin-dash digin-ml digin-box; do
   sed "s#/home/arduino/madhacks26#$REPO#" "$REPO/deploy/$unit.service" > "$RUN/$unit.service"
   cmp -s "$RUN/$unit.service" /etc/systemd/system/$unit.service || {
     cp "$RUN/$unit.service" /etc/systemd/system/$unit.service; changed=1; }
 done
 # enable first, then reload: enabling adds links that systemd would otherwise report as "changed on disk"
-systemctl enable --no-reload digin-dns digin-dash digin-detector digin-box 2>/dev/null
+systemctl enable --no-reload digin-dns digin-dash digin-ml digin-box 2>/dev/null
 [ "$changed" = 1 ] && systemctl daemon-reload
-systemctl reset-failed digin-dns digin-dash digin-detector 2>/dev/null || true
-systemctl restart digin-dns digin-dash digin-detector
+systemctl reset-failed digin-dns digin-dash digin-ml 2>/dev/null || true
+systemctl restart digin-dns digin-dash digin-ml
 sleep 2
-systemctl --no-pager --lines=3 status digin-dns digin-dash digin-detector || true
+systemctl --no-pager --lines=3 status digin-dns digin-dash digin-ml || true
 echo "Box up on $SSID. Dashboard: http://10.42.0.1   Watch lookups: python3 $REPO/dns/digin_dns.py tail"
