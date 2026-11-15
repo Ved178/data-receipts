@@ -111,7 +111,16 @@ def classify(qname, flags, chain=None):
 
 
 TRACKING = ("Advertising", "Analytics", "Social", "FingerprintingInvasive", "FingerprintingGeneral",
-            "Suspected", "Cryptomining")
+            "Suspected", "Cryptomining", "Shield blocklist")
+
+
+def classify_row(r, flags):
+    """classify(), plus: a lookup Shield blocked is a tracker even when the receipt lists don't
+    know it (it came from dns/blocklist.txt, e.g. moloco.rtb.afafb.com, tiktokpangle.us)."""
+    hit = classify(r["qname"], flags, r["cname_chain"])
+    if r["blocked"] and not is_tracking(hit):
+        hit = (company.base(r["qname"]), "Shield blocklist")
+    return hit
 
 
 def is_tracking(hit):
@@ -231,6 +240,100 @@ def tracker_web():
     }
 
 
+def _sessions(conn):
+    """All sessions, newest first, each with app, length and whether Shield blocked anything."""
+    out = []
+    for r in conn.execute("SELECT s.session_id, s.app_name, s.start_ts, s.end_ts,"
+                          " (SELECT COUNT(*) FROM raw_lookups l WHERE l.session_id=s.session_id),"
+                          " (SELECT COUNT(*) FROM raw_lookups l WHERE l.session_id=s.session_id AND l.blocked=1)"
+                          " FROM sessions s ORDER BY s.start_ts DESC"):
+        out.append({"session_id": r[0], "app_name": r[1], "start_ts": r[2], "end_ts": r[3],
+                    "lookups": r[4], "blocked": r[5], "shield": "on" if r[5] else "off"})
+    return out
+
+
+def timeline(session_id):
+    """Whack-a-mole: one row per tracking company, every lookup as blocked / caught / allowed,
+    plus the moments the game switched to a network the detector caught."""
+    conn = db()
+    s = next((x for x in _sessions(conn) if str(x["session_id"]) == str(session_id)), None)
+    if not s:
+        return {"error": "no such session"}
+    flags = flags_map(conn)
+    rows = conn.execute("SELECT ts, qname, cname_chain, blocked FROM raw_lookups WHERE session_id=? ORDER BY ts",
+                        (s["session_id"],)).fetchall()
+    start = s["start_ts"]
+    end = max([s["end_ts"] or time.time()] + [r["ts"] for r in rows])
+    cos, first_block = {}, None
+    for r in rows:
+        if company.background([r["qname"]] + chain_list(r["cname_chain"]), s["app_name"]):
+            continue
+        hit = classify_row(r, flags)
+        if not is_tracking(hit):
+            continue
+        status = "caught" if hit[1] == "Suspected" else ("blocked" if r["blocked"] else "allowed")
+        t = round(r["ts"] - start, 1)
+        if r["blocked"] and first_block is None and hit[1] == "Advertising":
+            first_block = {"t": t, "company": hit[0]}
+        c = cos.setdefault(hit[0], {"company": hit[0], "category": hit[1], "first_t": t, "events": []})
+        c["events"].append([t, status, r["qname"]])
+    companies = sorted(cos.values(), key=lambda c: c["first_t"])
+    switches = [{"t": c["first_t"], "company": c["company"]} for c in companies if c["category"] == "Suspected"]
+    return {"session": s, "duration_s": round(end - start, 1), "companies": companies,
+            "first_block": first_block, "switches": switches}
+
+
+def _session_summary(conn, s, flags):
+    rows = conn.execute("SELECT qname, cname_chain, blocked FROM raw_lookups WHERE session_id=?",
+                        (s["session_id"],)).fetchall()
+    reached, through, blocked_cos, caught = set(), set(), set(), set()
+    own_ok = own_blocked = 0
+    for r in rows:
+        if company.background([r["qname"]] + chain_list(r["cname_chain"]), s["app_name"]):
+            continue
+        hit = classify_row(r, flags)
+        if is_tracking(hit):
+            reached.add(hit[0])
+            if hit[1] == "Suspected":
+                caught.add(hit[0])
+            if r["blocked"]:
+                blocked_cos.add(hit[0])
+            else:
+                through.add(hit[0])
+        elif not company.is_system(r["qname"]):
+            # the game's own servers, its cloud hosts and CDNs: what it needs to work
+            if r["blocked"]:
+                own_blocked += 1
+            else:
+                own_ok += 1
+    return {"session_id": s["session_id"], "shield": s["shield"], "lookups": len(rows),
+            "duration_s": round((s["end_ts"] or time.time()) - s["start_ts"]),
+            "companies_reached": len(reached), "companies_blocked": len(blocked_cos - through),
+            "companies_through": sorted(through - caught), "caught": sorted(caught),
+            "game_lookups_ok": own_ok, "game_lookups_blocked": own_blocked,
+            "game_still_worked": own_ok > 0 and own_blocked == 0}
+
+
+def compare(app=None, off_id=None, on_id=None):
+    """Shield before/after for one app: latest Shield-OFF vs latest Shield-ON session (or given ids)."""
+    conn = db()
+    ss = [s for s in _sessions(conn) if s["lookups"]]
+    if app is None and ss:
+        app = next((s["app_name"] for s in ss if s["shield"] == "on"), ss[0]["app_name"])
+    mine = [s for s in ss if (s["app_name"] or "").strip().lower() == (app or "").strip().lower()]
+    def pick(sid, shield):
+        if sid:
+            return next((s for s in ss if str(s["session_id"]) == str(sid)), None)
+        return next((s for s in mine if s["shield"] == shield), None)  # newest first
+    off, on = pick(off_id, "off"), pick(on_id, "on")
+    flags = flags_map(conn)
+    apps = sorted({(s["app_name"] or "").strip() for s in ss if s["shield"] == "on"} &
+                  {(s["app_name"] or "").strip() for s in ss if s["shield"] == "off"}, key=str.lower)
+    return {"app": app, "apps_with_both": apps,
+            "off": _session_summary(conn, off, flags) if off else None,
+            "on": _session_summary(conn, on, flags) if on else None}
+
+
 def health():
     conn = db()
     last = conn.execute("SELECT MAX(ts) FROM raw_lookups").fetchone()[0]
@@ -274,8 +377,10 @@ class Handler(BaseHTTPRequestHandler):
         try:
             holdout = setting(db(), "demo_holdout", "") or ""
             company.set_holdout(holdout.split(","))
-            if u.path in ("/", "/index.html"):
-                with open(os.path.join(HERE, "static", "index.html"), "rb") as f:
+            q = parse_qs(u.query)
+            if u.path in ("/", "/index.html", "/story", "/story.html"):
+                name = "story.html" if u.path.startswith("/story") else "index.html"
+                with open(os.path.join(HERE, "static", name), "rb") as f:
                     page = f.read()
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -290,6 +395,12 @@ class Handler(BaseHTTPRequestHandler):
                 flags = list(flags_map(db()).values())
                 flags.sort(key=lambda f: -f["score"])
                 self.send_json(flags)
+            elif u.path == "/api/sessions":
+                self.send_json(_sessions(db()))
+            elif u.path == "/api/timeline":
+                self.send_json(timeline(q.get("session", [""])[0]))
+            elif u.path == "/api/compare":
+                self.send_json(compare(q.get("app", [None])[0], q.get("off", [None])[0], q.get("on", [None])[0]))
             elif u.path == "/health":
                 self.send_json(health())
             else:

@@ -78,6 +78,14 @@ def by_function(names, category):
     return category
 
 
+def base(name):
+    """Registrable name: ntusus.bidease.com -> bidease.com, a.b.co.uk -> b.co.uk."""
+    p = name.lower().strip(".").split(".")
+    if len(p) >= 3 and p[-2] in ("co", "com", "net", "org", "gov", "ac", "edu") and len(p[-1]) == 2:
+        return ".".join(p[-3:])
+    return ".".join(p[-2:])
+
+
 def display(name):
     return DISPLAY.get(name, name)
 
