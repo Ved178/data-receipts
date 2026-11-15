@@ -1,0 +1,19 @@
+# Keep the build context small: only what the box runs at demo time.
+.git
+.github
+**/__pycache__
+**/*.pyc
+**/*.swp
+**/.DS_Store
+*.db
+*.db-wal
+*.db-shm
+.venv
+data/pcapdroid
+data/sessions
+data/collected-data
+data/*.csv
+ml_eval
+tests
+docker-compose.yml
+docker/README.md

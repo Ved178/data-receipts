@@ -1,0 +1,62 @@
+# Data Receipt box services on the Arduino Uno Q. Start with:  sudo deploy/start_box_docker.sh
+# (that script brings the hotspot/firewall up on the host first, then runs `docker compose up -d`).
+#
+# All containers use host networking: DNS binds 10.42.0.1:53, the dashboard 10.42.0.1:80 (DigIn
+# only, never 0.0.0.0, so the venue network can't reach it), flows sniffs ap0. They share one
+# bind-mounted directory, so digin.db and its -wal/-shm files sit on one filesystem (§5).
+
+x-box: &box
+  image: digin:latest
+  network_mode: host
+  init: true                      # PID 1 reaps children, forwards SIGTERM: fast clean stops
+  restart: always
+  stop_grace_period: 3s
+  volumes:
+    - /home/arduino/digin:/home/arduino/digin
+  logging:
+    driver: json-file
+    options: { max-size: "5m", max-file: "2" }   # the board has ~2.6 GB free
+
+services:
+  dns:
+    <<: *box
+    container_name: digin-dns
+    environment: { WAIT_FOR: addr }
+    command: ["python", "dns/digin_dns.py", "serve", "--listen", "10.42.0.1"]
+    healthcheck:
+      # Socket check, not a real lookup: a probe query would be logged into raw_lookups and show
+      # up on the receipt, and would keep /health's "last row age" fresh during a real stall.
+      test: ["CMD-SHELL", "ss -Hlun 'sport = :53' | grep -q 10.42.0.1:53"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+      start_interval: 1s          # Engine 25+: probe every 1 s while starting
+
+  dash:
+    <<: *box
+    container_name: digin-dash
+    environment: { WAIT_FOR: addr }
+    command: ["python", "dashboard/app.py", "--host", "10.42.0.1", "--port", "80"]
+
+  detector:                       # rules-v1
+    <<: *box
+    container_name: digin-detector
+    environment: { WAIT_FOR: db }
+    command: ["python", "dns/detector.py", "--loop", "5"]
+    cpu_shares: 512               # = systemd Nice=10: DNS answers always win the CPU
+
+  ml:                             # ml-v1 (scikit-learn; ~5 s import, so it stays running)
+    <<: *box
+    container_name: digin-ml
+    environment: { WAIT_FOR: db }
+    command: ["python", "-m", "ml.score", "--db", "/home/arduino/digin/digin.db", "--loop", "5"]
+    cpu_shares: 512
+
+  flows:                          # optional: start_box_docker.sh skips it when FLOWS=off
+    <<: *box
+    container_name: digin-flows
+    environment: { WAIT_FOR: iface }
+    cap_add: [NET_ADMIN, NET_RAW]
+    command: ["python", "box/flows.py", "--db", "/home/arduino/digin/digin.db", "--iface", "ap0"]
+    profiles: ["flows"]
