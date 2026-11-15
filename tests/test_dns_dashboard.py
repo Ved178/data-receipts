@@ -181,6 +181,8 @@ class DetectorTest(unittest.TestCase):
         add(2, 9, "gateway.icloud.com")                     # phone background -> never
         add(2, 10, "doubleclick.net")                       # already on a list -> never (Shield's job)
         add(2, 11, "trk.cloakhost.net", '["ads.vungle.com"]')  # CNAME to a known tracker -> flagged, high
+        add(2, 12, "kapublicapiprod.azurewebsites.net",        # game's own API on Azure -> never (Knife Hit)
+            '["waws-prod-am2-287.westeurope.cloudapp.azure.com"]')
         conn.commit()
         self.conn = conn
 
@@ -213,6 +215,16 @@ class DetectorTest(unittest.TestCase):
         self.D.write_flags(self.conn, self.D.detect(self.conn))
         row = self.conn.execute("SELECT status, model_version FROM ml_flags WHERE domain='contentthing.org'").fetchone()
         self.assertEqual(row, ("dismissed", "rules-v1"))
+
+    def test_stale_own_suggestions_removed(self):
+        self.conn.execute("INSERT INTO ml_flags VALUES ('azure.com', 0.5, '[]', 'suspected', 'rules-v1', 1, 1)")
+        self.conn.execute("INSERT INTO ml_flags VALUES ('other.io', 0.9, '[]', 'suspected', 'hgb-v2', 1, 1)")
+        self.conn.commit()
+        self.D.write_flags(self.conn, self.D.detect(self.conn))
+        left = {r[0] for r in self.conn.execute("SELECT domain FROM ml_flags")}
+        self.assertNotIn("azure.com", left)          # our stale suggestion: gone
+        self.assertIn("other.io", left)              # another model's row: untouched
+        self.assertIn("newadnet.io", left)
 
 
 class DeployScriptsTest(unittest.TestCase):
