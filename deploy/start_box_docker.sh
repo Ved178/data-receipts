@@ -29,6 +29,10 @@ case "${1:-up}" in
   *) echo "usage: $0 [up|fallback]"; exit 2 ;;
 esac
 
+# Host tools the hotspot/firewall need (they run on the host, not in Docker).
+for t in iw nmcli iptables; do
+  command -v "$t" >/dev/null || { echo "Missing '$t' on the host: sudo apt-get install -y --no-install-recommends iw"; exit 1; }
+done
 docker compose version >/dev/null 2>&1 || {
   echo "docker compose plugin missing: sudo apt-get install docker-compose-plugin"; exit 1; }
 docker image inspect digin:latest >/dev/null 2>&1 || {

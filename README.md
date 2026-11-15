@@ -33,8 +33,10 @@ scp -r ../madhacks26 arduino@<board address>:/home/arduino/
 ```bash
 docker version
 docker compose version
+sudo apt-get install -y --no-install-recommends iw
 docker load < ~/digin-arm64.tar.gz
 ```
+`iw` is needed on the board itself (not in Docker): the hotspot uses it to create `ap0`.
 (If `docker` says "permission denied", put `sudo` in front, or run `sudo usermod -aG docker arduino` once and log in again.)
 
 **4. Optional per-board settings** in `/etc/digin/board.env` (same as `start_box.sh`). Other keys:
