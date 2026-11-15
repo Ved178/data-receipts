@@ -1,0 +1,16 @@
+[Unit]
+Description=Data Receipt ML scorer ml-v1 (writes ml_flags every 5 s)
+After=digin-dns.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Environment=DIGIN_DB=/home/arduino/digin/digin.db PYTHONDONTWRITEBYTECODE=1
+WorkingDirectory=/home/arduino/madhacks26
+ExecStart=/usr/bin/python3 -m ml.score --db /home/arduino/digin/digin.db --loop 5
+Restart=always
+RestartSec=2
+Nice=10
+
+[Install]
+WantedBy=multi-user.target
