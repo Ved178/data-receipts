@@ -148,7 +148,10 @@ class TrackerLookup:
                     return True
             except Exception:  # noqa: BLE001
                 pass
-        # blocklist.txt, minus anything lists.py says belongs to a held-out company
+        return self.on_blocklist(name)
+
+    def on_blocklist(self, name):
+        """dns/blocklist.txt, minus anything lists.py says belongs to a held-out company."""
         return any(p in self.blockset for p in parents(name)) and not self._held_out(name)
 
     def cname_hit(self, qname, chain, flagged=()):
@@ -275,14 +278,17 @@ class DigInResolver(BaseResolver):
         if not self.state["shield"]:
             return None
         t = self.trackers
-        if any(p in self.state["allow"] for p in parents(qname)) or t.is_allowlisted(qname):
+        # dns/blocklist.txt entries are deliberate, so they beat the CDN allowlist
+        # (e.g. global.moloco.map.fastly.net); the app's-own-company rule still applies.
+        listed = t.on_blocklist(qname)
+        if not listed and (any(p in self.state["allow"] for p in parents(qname)) or t.is_allowlisted(qname)):
             return None
         own = APP_OWNER.get((app or "").strip().lower())
         if (own and t.company(qname) == own) or t.same_company(qname, app):
             return None
         if any(p in self.state["ml_blocked"] for p in parents(qname)):
             return "ml"
-        if t.is_tracker(qname):
+        if listed or t.is_tracker(qname):
             return "list"
         if t.cname_hit(qname, chain, self.state["ml_blocked"]):
             return "cname"

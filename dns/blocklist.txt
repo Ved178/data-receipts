@@ -40,3 +40,8 @@ amazon-adsystem.com
 app-analytics-services.com
 safedk.com
 appsflyersdk.com
+# Found live on Block Blast (Nov 14): ad networks missing from every list
+tiktokpangle.us                # Pangle (TikTok/ByteDance ads), US ad requests
+tiktokpangle-cdn-us.com        # Pangle ad videos
+moloco.rtb.afafb.com           # Moloco ads hidden under Block Blast's own domain
+global.moloco.map.fastly.net   # Moloco ads on the Fastly CDN
