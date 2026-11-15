@@ -1,0 +1,15 @@
+[Unit]
+Description=Data Receipt detector rules-v1 (writes ml_flags every 5 s)
+After=digin-dns.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Environment=DIGIN_DB=/home/arduino/digin/digin.db PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 /home/arduino/madhacks26/dns/detector.py --loop 5
+Restart=always
+RestartSec=2
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

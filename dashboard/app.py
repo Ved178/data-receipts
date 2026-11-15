@@ -102,9 +102,11 @@ def classify(qname, flags, chain=None):
         hit = company.company_for(target)
         if hit and hit[1] in TRACKING:
             return (company.display(hit[0]), hit[1])
-    f = flags.get(qname)
+    # The detector flags registrable names (bidease.com); match any parent of the lookup.
+    p = qname.lower().strip(".").split(".")
+    f = next((flags[".".join(p[i:])] for i in range(len(p) - 1) if ".".join(p[i:]) in flags), None)
     if f and f["status"] in ("suspected", "auto_blocked"):
-        return (qname, "Suspected")
+        return (f["domain"], "Suspected")
     return None
 
 
