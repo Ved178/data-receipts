@@ -114,13 +114,40 @@ TRACKING = ("Advertising", "Analytics", "Social", "FingerprintingInvasive", "Fin
             "Suspected", "Cryptomining", "Shield blocklist")
 
 
-def classify_row(r, flags):
+def classify_row(r, flags, app=None, own=()):
     """classify(), plus: a lookup Shield blocked is a tracker even when the receipt lists don't
-    know it (it came from dns/blocklist.txt, e.g. moloco.rtb.afafb.com, tiktokpangle.us)."""
+    know it (it came from dns/blocklist.txt). Its row label is never a hosting name:
+      - under the app's own domain (moloco.rtb.afafb.com) -> "Block Blast's ad servers"
+      - a hosting name that says whose it is (global.moloco.map.fastly.net) -> that company
+      - any other hosting name -> "Other ad servers"."""
     hit = classify(r["qname"], flags, r["cname_chain"])
     if r["blocked"] and not is_tracking(hit):
-        hit = (company.base(r["qname"]), "Shield blocklist")
+        names = [r["qname"]] + chain_list(r["cname_chain"])
+        b = company.base(r["qname"])
+        if b in own:
+            label = f"{app}'s ad servers"
+        elif company.ad_company_from_name(names):
+            label = company.ad_company_from_name(names)
+        elif company.is_hosting(r["qname"]):
+            label = "Other ad servers"
+        else:
+            label = b
+        hit = (label, "Shield blocklist")
     return hit
+
+
+def own_bases(rows, flags, app):
+    """The app's own domains in a session: names it reached unblocked that are not trackers,
+    hosting, background or system (afafb.com for Block Blast)."""
+    out = set()
+    for r in rows:
+        if r["blocked"] or company.is_system(r["qname"]) or company.is_hosting(r["qname"]):
+            continue
+        if company.background([r["qname"]] + chain_list(r["cname_chain"]), app):
+            continue
+        if not is_tracking(classify(r["qname"], flags, r["cname_chain"])):
+            out.add(company.base(r["qname"]))
+    return out
 
 
 def is_tracking(hit):
@@ -203,7 +230,7 @@ def state(session_param):
         "shield": setting(conn, "shield", "off"),
         "selected_app": setting(conn, "selected_app", ""),
         "demo_mode": setting(conn, "demo_mode", "off"),
-        "sessions": sessions,
+        "sessions": [x for x in sessions if not company.is_test_session(x["app_name"])],
         "session": sel,
         "duration_s": duration,
         "totals": {"lookups": len(rows), "domains": len({r["qname"] for r in rows}),
@@ -222,7 +249,8 @@ def state(session_param):
 def tracker_web():
     conn = db()
     flags = flags_map(conn)
-    apps = {r["session_id"]: r["app_name"] for r in conn.execute("SELECT session_id, app_name FROM sessions")}
+    apps = {r["session_id"]: r["app_name"] for r in conn.execute("SELECT session_id, app_name FROM sessions")
+            if not company.is_test_session(r["app_name"])}
     edges = defaultdict(int)
     for r in conn.execute("SELECT session_id, qname, cname_chain FROM raw_lookups WHERE session_id IS NOT NULL"):
         if r["session_id"] not in apps or company.background(
@@ -247,6 +275,8 @@ def _sessions(conn):
                           " (SELECT COUNT(*) FROM raw_lookups l WHERE l.session_id=s.session_id),"
                           " (SELECT COUNT(*) FROM raw_lookups l WHERE l.session_id=s.session_id AND l.blocked=1)"
                           " FROM sessions s ORDER BY s.start_ts DESC"):
+        if company.is_test_session(r[1]):
+            continue
         out.append({"session_id": r[0], "app_name": r[1], "start_ts": r[2], "end_ts": r[3],
                     "lookups": r[4], "blocked": r[5], "shield": "on" if r[5] else "off"})
     return out
@@ -263,12 +293,13 @@ def timeline(session_id):
     rows = conn.execute("SELECT ts, qname, cname_chain, blocked FROM raw_lookups WHERE session_id=? ORDER BY ts",
                         (s["session_id"],)).fetchall()
     start = s["start_ts"]
+    own = own_bases(rows, flags, s["app_name"])
     end = max([s["end_ts"] or time.time()] + [r["ts"] for r in rows])
     cos, first_block = {}, None
     for r in rows:
         if company.background([r["qname"]] + chain_list(r["cname_chain"]), s["app_name"]):
             continue
-        hit = classify_row(r, flags)
+        hit = classify_row(r, flags, s["app_name"], own)
         if not is_tracking(hit):
             continue
         status = "caught" if hit[1] == "Suspected" else ("blocked" if r["blocked"] else "allowed")
@@ -288,10 +319,11 @@ def _session_summary(conn, s, flags):
                         (s["session_id"],)).fetchall()
     reached, through, blocked_cos, caught = set(), set(), set(), set()
     own_ok = own_blocked = 0
+    own = own_bases(rows, flags, s["app_name"])
     for r in rows:
         if company.background([r["qname"]] + chain_list(r["cname_chain"]), s["app_name"]):
             continue
-        hit = classify_row(r, flags)
+        hit = classify_row(r, flags, s["app_name"], own)
         if is_tracking(hit):
             reached.add(hit[0])
             if hit[1] == "Suspected":

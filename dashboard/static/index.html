@@ -114,6 +114,14 @@
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let chosen = "current", lastSessions = "";
+let sessionFlags = null, lastFlags = [];   // flags caught in the SELECTED session (null = not loaded yet)
+// Every list category, in plain words (the receipt shows them in capitals).
+const CAT_LABEL = {"Advertising": "Advertising", "Analytics": "Analytics", "Social": "Social", "Content": "Content",
+  "Email": "Email", "EmailAggressive": "Email (aggressive)", "Cryptomining": "Crypto mining",
+  "FingerprintingGeneral": "Fingerprinting", "FingerprintingInvasive": "Fingerprinting (invasive)",
+  "ConsentManagers": "Consent managers", "Anti-fraud": "Anti-fraud", "Shield blocklist": "Shield blocklist"};
+// Anything new: "SomeNewCategory" -> "Some new category"
+const catLabel = c => CAT_LABEL[c] || String(c).replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase().replace(/^./, x => x.toUpperCase());
 
 async function post(url, body){ await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})}); refresh(); }
 
@@ -138,7 +146,7 @@ function renderReceipt(st){
   if(!st.receipt.length) h += `<div class="r-center r-small" style="padding:16px 0">Waiting for lookups...<br>Join DigIn and open an app.</div>`;
   for(const g of st.receipt){
     const sus = g.category === "Suspected";
-    h += `<div class="r-cat ${sus?"r-sus":""}">${sus?"Caught by our detector":esc(g.category)} (${g.companies.length})</div>
+    h += `<div class="r-cat ${sus?"r-sus":""}">${sus?"Caught by our detector":esc(catLabel(g.category))} (${g.companies.length})</div>
           <div class="r-note">${esc(g.note)}</div>`;
     for(const c of g.companies){
       const name = c.company.length > 26 ? c.company.slice(0,25)+"…" : c.company;
@@ -180,14 +188,29 @@ async function refresh(){
     $("#c-companies").textContent = st.totals.companies;
     $("#c-blocked").textContent = st.totals.companies_blocked;
     renderSessions(st); renderReceipt(st); renderFeed(st);
+    const sus = st.receipt.find(g => g.category === "Suspected");
+    sessionFlags = new Set(sus ? sus.companies.map(c => c.company) : []);
+    renderFlags();
   }catch(e){ console.warn(e); }
 }
 
 async function refreshSlow(){
   try{
-    const flags = await (await fetch("/api/flags")).json();
-    const live = flags.filter(f => f.status !== "dismissed");
-    $("#c-suspects").textContent = live.length; $("#s-suspects").hidden = live.length === 0;
+    lastFlags = await (await fetch("/api/flags")).json();
+    renderFlags();
+
+    const web = await (await fetch("/api/web")).json();
+    drawWeb(web);
+    $("#rank").innerHTML = web.everywhere.length ? web.everywhere.map(([c,n]) => `<span>${esc(c)}</span><b>${n} app${n>1?"s":""}</b>`).join("")
+      : `<span class="empty">Run 2+ app sessions to see this.</span>`;
+  }catch(e){ console.warn(e); }
+}
+
+// Only flags the detector caught in the SELECTED session: a flagged domain this session contacted.
+function renderFlags(){
+    if(sessionFlags === null) return;
+    const flags = lastFlags.filter(f => sessionFlags.has(f.domain) && f.status !== "dismissed");
+    $("#c-suspects").textContent = flags.length; $("#s-suspects").hidden = flags.length === 0;
     $("#flags").innerHTML = flags.length ? flags.slice(0,8).map(f => `
       <div class="flag ${esc(f.status)}">
         <div class="d">${esc(f.domain)}</div>
@@ -195,14 +218,8 @@ async function refreshSlow(){
         <div class="why">${Math.round(f.score*100)}% · ${esc((f.reasons||[]).join(" + "))}</div>
         <div class="acts">${f.status==="auto_blocked" ? "<b style='color:var(--green)'>Auto-blocked</b>" :
           `<button data-d="${esc(f.domain)}" data-s="auto_blocked">Block</button><button data-d="${esc(f.domain)}" data-s="dismissed">Dismiss</button>`}</div>
-      </div>`).join("") : `<div class="empty">Nothing yet. The detector flags domains that aren't on any blocklist.</div>`;
+      </div>`).join("") : `<div class="empty">Nothing caught in this session yet. The detector flags domains that aren't on our blocklists.</div>`;
     document.querySelectorAll(".flag button").forEach(b => b.onclick = () => post("/api/flag",{domain:b.dataset.d,status:b.dataset.s}));
-
-    const web = await (await fetch("/api/web")).json();
-    drawWeb(web);
-    $("#rank").innerHTML = web.everywhere.length ? web.everywhere.map(([c,n]) => `<span>${esc(c)}</span><b>${n} app${n>1?"s":""}</b>`).join("")
-      : `<span class="empty">Run 2+ app sessions to see this.</span>`;
-  }catch(e){ console.warn(e); }
 }
 
 function drawWeb(web){
