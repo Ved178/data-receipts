@@ -7,8 +7,14 @@ Writes `raw_lookups`, `sessions`, `settings` in `digin.db` (frozen schema: `db/s
     git clone <repo> /home/arduino/madhacks26 && cd /home/arduino/madhacks26
 
 ## Plan A (box hosts DigIn at 10.42.0.1)
-    sudo deploy/start_box.sh          # hotspot hands out IPs, our server answers DNS, systemd keeps it alive
+    sudo deploy/start_box.sh          # Pranshu's box/hotspot.sh + firewall, DNS hand-off, logger + dashboard
     python3 dns/digin_dns.py tail     # watch lookups live
+    sudo deploy/fallback_dnsmasq.sh   # undo: back to Pranshu's plain dnsmasq mode (start_box.sh to return)
+Run start_box.sh once; it installs digin-box.service, so everything comes back by itself after a reboot
+(tested on board #2: up 15 s after boot). Disable with `sudo systemctl disable digin-box`.
+Second board: put `SSID=DigIn2`, `AP_MAC=02:12:34:56:78:9b`, `UPLINK=UWNet` in /etc/digin/board.env.
+No internet on the board yet (UWNet login)? Packages can be copied over USB: `apt install` needs
+iw, conntrack, python3-dnslib. Dashboard from a laptop over USB: `adb forward tcp:8090 tcp:80`.
 
 ## Plan B (box and phone on a teammate's hotspot)
     hostname -I                       # BOARD_IP
