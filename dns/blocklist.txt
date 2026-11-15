@@ -50,3 +50,6 @@ adsrvr.org                     # The Trade Desk
 # Found live on board #2 (Nov 14, Shield ON round 2): Pangle names missing from every list
 tiktokpangle-b.us              # Pangle US API (api16-access-ttp...)
 pangle-shared-api.bytewlb.akadns.net   # Pangle API behind ByteDance's Akamai name
+# Facebook's ad network only (these beat the facebook.com allowlist entry)
+an.facebook.com                # Meta Audience Network (in-app ads)
+pixel.facebook.com             # Meta Pixel
