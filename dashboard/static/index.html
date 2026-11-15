@@ -115,8 +115,13 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let chosen = "current", lastSessions = "";
 let sessionFlags = null, lastFlags = [];   // flags caught in the SELECTED session (null = not loaded yet)
-const CAT_LABEL = {"FingerprintingGeneral": "Fingerprinting"};
-const catLabel = c => CAT_LABEL[c] || c;
+// Every list category, in plain words (the receipt shows them in capitals).
+const CAT_LABEL = {"Advertising": "Advertising", "Analytics": "Analytics", "Social": "Social", "Content": "Content",
+  "Email": "Email", "EmailAggressive": "Email (aggressive)", "Cryptomining": "Crypto mining",
+  "FingerprintingGeneral": "Fingerprinting", "FingerprintingInvasive": "Fingerprinting (invasive)",
+  "ConsentManagers": "Consent managers", "Anti-fraud": "Anti-fraud", "Shield blocklist": "Shield blocklist"};
+// Anything new: "SomeNewCategory" -> "Some new category"
+const catLabel = c => CAT_LABEL[c] || String(c).replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase().replace(/^./, x => x.toUpperCase());
 
 async function post(url, body){ await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})}); refresh(); }
 
