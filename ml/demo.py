@@ -1,5 +1,5 @@
 """Demo mode: remove one real tracker company from every list so the model has to
-catch it live (CLAUDE.md §1 "the one moment", §6.1).
+catch it live (docs/team-brief.md §1 "the one moment", §6.1).
 
     python3 -m ml.demo set InMobi        # demo_mode=on, demo_holdout=InMobi, clears its old flags
     python3 -m ml.demo status            # what's held out + is it caught yet?

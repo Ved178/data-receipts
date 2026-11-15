@@ -1,4 +1,4 @@
-"""Grouped held-out evaluation (CLAUDE.md §7 Samarth #4, §6.1, §6.4).
+"""Grouped held-out evaluation (docs/team-brief.md §7 Samarth #4, §6.1, §6.4).
 
 Hold out whole companies, remove them from EVERY list (labels, blocklist, CNAME
 targets, ad-network IP owners) via ml.lists.load(exclude_companies=...), let each
@@ -192,7 +192,7 @@ def write_results(results, db_path, note=""):
     with open(RESULTS, "a") as f:
         if new:
             f.write("# RESULTS\n\nEvery eval run, appended by `python3 -m ml_eval.evaluate`. "
-                    "Counts next to percentages (CLAUDE.md §6.4).\n")
+                    "Counts next to percentages (docs/team-brief.md §6.4).\n")
         f.write("\n".join(body) + "\n")
     with open(TABLE, "w") as f:
         f.write(f"<!-- generated {stamp} by ml_eval/evaluate.py -->\n")

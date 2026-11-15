@@ -5,7 +5,7 @@
     F = features.build(conn, L)                      # {domain: {feature: value}}
     X = features.matrix(F, domains)                  # numpy, columns = features.FEATURES
 
-Leakage rules (CLAUDE.md §6.1):
+Leakage rules (docs/team-brief.md §6.1):
   * every list-derived signal (CNAME target, ad-network owner, "known tracker" lookups)
     goes through `L`, so held-out / demo-removed companies are NOT known here;
   * a domain's own list status is never a feature, and neither is `blocked`: Shield answers

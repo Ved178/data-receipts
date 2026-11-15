@@ -1,0 +1,7 @@
+# Box and laptop. On the Uno Q install into the system python3 (the services use /usr/bin/python3):
+#   sudo pip install --break-system-packages -r requirements.txt
+dnslib
+numpy
+scikit-learn==1.9.1   # the committed model was trained with this version
+joblib
+maxminddb             # recommended: without it the model runs with one feature (ip_generic_infra) empty

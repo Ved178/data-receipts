@@ -21,7 +21,7 @@ phone ──Wi-Fi "DigIn" (ap0, 10.42.0.1)──► Uno Q ──Wi-Fi client "UW
 ```
 
 - Everything shares one SQLite file: `/home/arduino/digin/digin.db` (schema: `db/schema.sql`, frozen).
-- Pranshu's `box/hotspot.sh` + `box/box/firewall.sh` create the hotspot on a second interface
+- Pranshu's `box/hotspot.sh` + `box/firewall.sh` create the hotspot on a second interface
   (`ap0`), so the board stays on UWNet at the same time.
 - `start_box.sh` never edits Pranshu's `/etc/NetworkManager/dnsmasq-shared.d/digin.conf`. It adds its
   own `zz-aarav-dns-handoff.conf` (`port=0`, `dhcp-option=6,10.42.0.1`). Delete that one file (or run
@@ -86,7 +86,7 @@ adb push madhacks26 /home/arduino/
 Then on the board:
 ```bash
 cd /home/arduino/madhacks26
-chmod +x deploy/*.sh box/*.sh box/box/*.sh
+chmod +x deploy/*.sh box/*.sh
 chmod -R go-w /home/arduino/madhacks26     # the boot service runs this folder as root
 python3 -m unittest discover tests         # expect: Ran 33 tests ... OK
 ```
@@ -154,7 +154,7 @@ DIGIN_KEY=~/.ssh/digin_board1 ./deploy/demo_connect.sh <board address>
 
 ## 10. Adding the ML model (your part)
 
-The contract is CLAUDE.md §5. What already exists and how to plug in:
+The contract is docs/team-brief.md §5. What already exists and how to plug in:
 
 - **Write to `ml_flags`** with your own `model_version` (e.g. `hgb-v1`), `status='suspected'`,
   `score` 0–1, `reasons` = JSON list of plain-English strings. `auto_blocked` only if score ≥ 0.97,

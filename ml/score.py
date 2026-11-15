@@ -3,7 +3,7 @@
     python3 -m ml.score --db /home/arduino/digin/digin.db --once
     python3 -m ml.score --db ... --loop 3
 
-Rules (CLAUDE.md §7 / handoff §5):
+Rules (docs/team-brief.md §7 / handoff §5):
   * only domains NOT on any list and not allowlisted are scored (Shield owns the rest);
   * new rows are 'suspected'; 'auto_blocked' is OFF unless --auto-block, and then only if score >= AUTO_BLOCK_THRESHOLD, the
     domain is not the current session app's own company, and it is not allowlisted;

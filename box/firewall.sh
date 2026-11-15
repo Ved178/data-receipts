@@ -1,6 +1,6 @@
 #!/bin/bash
 # box/firewall.sh - make DigIn devices use the box for DNS. Safe to run again.
-# Called by hotspot.sh. Rules (CLAUDE.md section 3):
+# Called by hotspot.sh. Rules (docs/team-brief.md section 3):
 #   - REJECT (not DROP) DNS-over-TLS (port 853) so phones fall back to us fast
 #   - REJECT DNS-over-HTTPS to well-known public resolvers (port 443)
 #   - Send plain DNS aimed at outside servers (e.g. hard-coded 8.8.8.8:53) to the box

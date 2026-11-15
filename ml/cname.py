@@ -1,4 +1,4 @@
-"""CNAME uncloaking + the rule flags (cut line, CLAUDE.md §7 Samarth #6).
+"""CNAME uncloaking + the rule flags (cut line, docs/team-brief.md §7 Samarth #6).
 
 A "cloaked" tracker hides behind the site's own name: metrics.someapp.com is a
 CNAME to someapp.sc.omtrdc.net (Adobe). Lists keyed on names miss it; the chain gives

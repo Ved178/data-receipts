@@ -3,7 +3,7 @@ ad-network IP owners and CNAME targets — all with held-out companies removed.
 
     from ml import lists
     L = lists.load()                                  # everything
-    L = lists.load(exclude_companies=["InMobi"])      # eval / demo mode (CLAUDE.md §6.1)
+    L = lists.load(exclude_companies=["InMobi"])      # eval / demo mode (docs/team-brief.md §6.1)
     L = lists.load_live(conn)                         # reads settings.demo_holdout, cached
 
     L.company("a.b.doubleclick.net")   -> ("Google", "Advertising") or None

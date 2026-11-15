@@ -138,7 +138,7 @@ _holdout = ()  # companies removed for demo mode (settings.demo_holdout), set by
 
 
 def set_holdout(companies):
-    """Demo mode (CLAUDE.md 6.1): held-out companies must vanish from the receipt lists too,
+    """Demo mode (docs/team-brief.md 6.1): held-out companies must vanish from the receipt lists too,
     so the model's catch shows up as Suspected instead of as a known company."""
     global _holdout
     _holdout = tuple(sorted({c.strip() for c in companies if c and c.strip()}))

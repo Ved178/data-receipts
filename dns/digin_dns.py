@@ -2,7 +2,7 @@
 """
 dns/digin_dns.py - DigIn DNS logger + Shield (owner: Aarav). Runs on the Uno Q, Linux side.
 
-Follows CLAUDE.md:
+Follows docs/team-brief.md:
   section 5   writes raw_lookups / sessions / settings exactly as frozen in db/schema.sql
   section 6.3 never takes the network down:
                 - per-query upstream timeout (2 s) with a second upstream
@@ -53,7 +53,7 @@ ALWAYS_NX = {"mask.icloud.com", "mask-h2.icloud.com", "use-application-dns.net"}
 LOGGED_QTYPES = {"A", "AAAA", "HTTPS", "CNAME"}
 
 # App name (as typed at session start) -> owning company, so Shield never blocks an
-# app's own company (CLAUDE.md section 7, Aarav task 2). Extend as needed.
+# app's own company (docs/team-brief.md section 7, Aarav task 2). Extend as needed.
 APP_OWNER = {
     "instagram": "Meta", "facebook": "Meta", "whatsapp": "Meta", "messenger": "Meta",
     "threads": "Meta", "youtube": "Google", "gmail": "Google", "google": "Google",
@@ -91,7 +91,7 @@ def read_domain_file(path):
 
 class TrackerLookup:
     """Known-tracker checks. Uses ml/lists.py (Samarth) when it imports, with the live demo
-    holdout applied (CLAUDE.md 6.1); dns/blocklist.txt is the fallback and an extra list.
+    holdout applied (docs/team-brief.md 6.1); dns/blocklist.txt is the fallback and an extra list.
     lists.py API: load_live(conn) -> Lists with .owner() .is_tracker() .is_allowlisted()
     .same_company() .cname_tracker() .excluded_domains."""
 
@@ -236,7 +236,7 @@ class DigInResolver(BaseResolver):
         self.refresh()  # load lists now, not on the first phone query
 
     def refresh(self):
-        """Re-read settings, ml_flags and sessions at most every 2 s (CLAUDE.md task 2)."""
+        """Re-read settings, ml_flags and sessions at most every 2 s (docs/team-brief.md task 2)."""
         if time.time() - self.state_ts < 2.0:
             return
         self.state_ts = time.time()

@@ -1,4 +1,4 @@
-"""Plain-English reasons for a flag, built from feature values (CLAUDE.md §7).
+"""Plain-English reasons for a flag, built from feature values (docs/team-brief.md §7).
 
     reasons.explain(domain, feats, details) -> up to 3 strings (stored as a JSON array)
 

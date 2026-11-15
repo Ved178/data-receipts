@@ -2,13 +2,13 @@
 
     fit_predict(conn, L, domains) -> {domain: probability}
 
-Labels come ONLY from `L` (held-out / demo companies already removed, CLAUDE.md §6.1):
+Labels come ONLY from `L` (held-out / demo companies already removed, docs/team-brief.md §6.1):
   positive = L.is_tracker(domain); negative = hand-confirmed content domains
   (data/lists/content_negatives.txt). Everything else is unlabeled: scored, never trained on.
 
 Honest scoring: labeled domains that appear in `domains` are scored out-of-fold, with folds
 grouped by owning company, so a domain is never scored by a model that saw it or its company
-(CLAUDE.md rule: grouped split). Unlabeled domains (e.g. held-out trackers) get the model fit
+(docs/team-brief.md rule: grouped split). Unlabeled domains (e.g. held-out trackers) get the model fit
 on all labeled data.
 
     python -m ml.train --db data/sessions/digin_run1.db --out ml/models

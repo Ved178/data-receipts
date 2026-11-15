@@ -1,151 +1,96 @@
-# madhacks26
+# Data Receipt
 
-**Data Receipt** (MadHacks 2026): a Wi-Fi box on an Arduino Uno Q that logs DNS lookups, blocks
-known trackers with Shield, and runs an on-device ML model that flags trackers no list knows,
-each with a plain-English reason. The team brief is in [`CLAUDE.md`](CLAUDE.md).
+**A Wi-Fi box that catches the trackers ad blockers miss.** Built at MadHacks 2026 on an Arduino Uno Q.
 
-Everything meets in one SQLite file, `digin.db` (schema in `db/schema.sql`). The ML part reads
-`raw_lookups`, `raw_flows` and `sessions`, and writes `ml_flags`.
+Every ad blocker is only as good as its list, and trackers dodge lists by renaming themselves or
+hiding behind a website's own name. Data Receipt sits between your phone and the internet, shows
+a live "receipt" of every company each app talks to, blocks known trackers, and runs an
+**on-device ML model** that flags new or disguised trackers by how they behave on the network,
+each with a plain-English reason. No cloud: everything runs on the box.
 
-## ML scorer (`ml/`)
+## What it does
 
-`ml/score.py` scores every domain that is on no list and writes the suspicious ones to
-`ml_flags`: `domain`, `score` (0 to 1), `reasons` (JSON array of sentences), `status`
-(`suspected`), `model_version` (`ml-v1`). The trained model is committed at
-`ml/models/model_ml-v1.joblib`.
+- **Receipt.** Join the box's Wi-Fi (**DigIn**), use any app, and the dashboard lists every
+  company it contacted, grouped by category (ads, analytics, fingerprinting, content).
+- **Shield.** One tap blocks known trackers at the DNS level for every device on the network.
+  The app keeps working; the ads don't load.
+- **Suspected trackers.** A model trained on our own captures scores every domain that no
+  blocklist knows and explains why: *"CNAME points to a known tracker; seen in 7 unrelated apps;
+  fires at app launch"*. One tap blocks it.
+- **Tracker Web.** Which ad companies show up across which apps.
 
-Rules it follows:
+**Result:** trained with InMobi and Vungle removed from every list, the model still caught
+**18 of their 29 domains, with 1 false flag among 61 content domains** (threshold 0.8). Full,
+honest numbers and their caveats: [`docs/model.md`](docs/model.md).
 
-- Domains already on a blocklist or allowlist are never scored.
-- Flags start as `suspected`. `auto_blocked` happens only with `--auto-block` and a score of
-  0.97 or more, and never for the current app's own company.
-- Rows the dashboard set to `dismissed` or `allowlisted` are never overwritten.
-- A locked database is retried with backoff. A missing model is logged, then it sleeps.
-
-### Run it on a laptop
-
-From the repo root:
-
-```
-python3 -m venv .venv
-.venv/bin/pip install numpy scikit-learn joblib maxminddb pytest
-```
-
-Test on a **copy** of a database, never on the real one:
+## How it works
 
 ```
-cp data/sessions/all.db /tmp/test.db
-.venv/bin/python -m ml.score --db /tmp/test.db --once
-sqlite3 /tmp/test.db "select domain, round(score,2), reasons from ml_flags order by score desc limit 10;"
+phone ──Wi-Fi "DigIn" (10.42.0.1)──► Arduino Uno Q ──uplink Wi-Fi / USB tether──► internet
+                                          │
+   dns/digin_dns.py    DNS server: logs every lookup, Shield answers 0.0.0.0 for trackers
+   box/flows.py        per-connection byte counts (tcpdump)         ┐
+   ml/score.py         ML model ml-v1, scores unlisted domains      ├─ all share one SQLite
+   dns/detector.py     rules detector (Shield-off vs Shield-on)     │  file: digin.db
+   dashboard/app.py    live dashboard at http://10.42.0.1           ┘
 ```
 
-`--once` does one pass. For a live loop that rescores every 5 seconds, replace it with
-`--loop 5` (stop with Ctrl-C). Insert rows into `raw_lookups` from another terminal and new flags
-appear on the next pass.
+The model is gradient boosting (scikit-learn) on behavior features, not names: CNAME chains to
+ad companies, how many unrelated apps contact a domain, whether it fires at app launch, whether
+it travels with known trackers, server network owner (ASN), bytes up vs down, and timing.
+It never scores domains already on a list, login hosts or call servers, and it never
+auto-blocks: flags start as *suspected* and a person decides.
 
-Other flags: `--threshold 0.8` (lowest score written; 0.8 is the default, the dashboard splits flags at 0.95), `--models <dir>`, `--auto-block`.
+## Run it
 
-Check the tests and the held-out numbers:
+**On the Uno Q** (full guide: [`deploy/SETUP_BOARD.md`](deploy/SETUP_BOARD.md)):
 
-```
-.venv/bin/python -m pytest -q tests
-.venv/bin/python -m ml_eval.evaluate --db data/sessions/all.db --holdout InMobi --holdout Vungle --threshold 0.7 --no-write
-```
-
-`--no-write` stops it from overwriting `RESULTS.md`. The leak check must print PASS.
-
-### Run it on the Arduino Uno Q
-
-Do the install while the box is online, because the demo runs offline.
-
-1. Get the repo onto the box (git pull). The model file, `ml/data/GeoLite2-ASN.mmdb` and
-   `data/lists/` come with it.
-2. Install the Python packages on the box: `numpy`, `scikit-learn`, `joblib`, `maxminddb`.
-   Use a venv, and download the wheels in advance if the box will be offline.
-3. Confirm it runs, using a copy first:
-   ```
-   cp /home/arduino/digin/digin.db /tmp/digin_copy.db
-   python3 -m ml.score --db /tmp/digin_copy.db --once
-   ```
-   It should print `score: wrote N flags in X s (model ml-v1)`. The target is under 1 second.
-4. Run it for real, next to the DNS server:
-   ```
-   python3 -m ml.score --db /home/arduino/digin/digin.db --loop 5
-   ```
-   To keep it running, use a systemd unit (the team's units live in `deploy/`) with
-   `Restart=always` and the command above as `ExecStart`.
-
-Status: scikit-learn on the Uno Q's ARM CPU has **not been tested yet**. If it fails to install or
-import, the fallback from the brief is the rule flags in `ml/cname.py`, which write to the
-same table.
-
-If `maxminddb` or the ASN file is missing, the `ip_generic_infra` feature becomes empty and the
-scorer still runs, with slightly different scores.
-
-### Retrain or change the data
-
-```
-# DNS logs from the box (one session spec per app, times in UTC)
-.venv/bin/python -m ml_eval.import_dnsmasq data/collected-data/run4_bike_racing.log \
-    --out data/sessions/run4.db --year 2026 --session "Bike Race=01:28:05-01:32:40"
-
-# PCAPdroid exports (one app per file; background apps are dropped by default)
-.venv/bin/python -m ml_eval.import_pcapdroid data/pcapdroid/pcap-*.csv --out data/sessions/pcap.db
-
-# merge sources into one training database, then train
-.venv/bin/python -m ml_eval.merge_dbs --out data/sessions/all.db data/sessions/run4.db data/sessions/pcap.db
-.venv/bin/python -m ml.train --db data/sessions/all.db --version ml-v1
+```bash
+sudo apt-get install -y --no-install-recommends iw conntrack tcpdump python3-dnslib python3-pip
+sudo pip install --break-system-packages -r requirements.txt
+sudo deploy/start_box.sh          # hotspot, DNS, dashboard, both detectors; also at every boot
 ```
 
-Labels come from the lists in `data/lists/`:
+Then on a phone: mobile data off, join **DigIn** (password `digin1234`), open
+**http://10.42.0.1**, type the app name, press **Start**, use the app, press **End**.
+Health: `http://10.42.0.1/health`. Undo: `sudo deploy/fallback_dnsmasq.sh`.
 
-| File | Role |
+**On a laptop** (no hotspot; uses a recorded database):
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+cp data/sessions/all.db /tmp/demo.db
+.venv/bin/python -m ml.score --db /tmp/demo.db --once          # model writes its flags
+.venv/bin/python dashboard/app.py --host 127.0.0.1 --port 8080 --db /tmp/demo.db
+# open http://127.0.0.1:8080
+.venv/bin/python -m unittest discover tests                     # 47 tests
+```
+
+**Demo mode** removes one real tracker company from every list, so the model has to catch it
+live: `python3 -m ml.demo set InMobi`, then `status`, then `clear`.
+
+## Repo layout
+
+| Folder | What's in it |
 |---|---|
-| `services.json` (Disconnect) and `ml/lists.py` `EXTRA` | tracker labels (positives) |
-| `content_negatives.txt` | hand-confirmed content domains (negatives) |
-| `infrastructure_allowlist.txt` | hand-reviewed CDN and OS domains: never flagged or blocked |
-| `allowlist_trackerradar.txt` | generated by `python tools/build_allowlist.py` from Tracker Radar |
+| `dns/` | DNS logger + Shield, rules detector |
+| `dashboard/` | web dashboard (no external assets, works offline) |
+| `ml/` | tracker lists, CNAME uncloaking, ASN lookup, features, model, live scorer, demo mode |
+| `ml_eval/` | held-out evaluation by company, importers for PCAPdroid and box captures |
+| `box/` | hotspot, firewall, flow capture |
+| `deploy/` | systemd services, one-command start, board setup guide |
+| `db/` | the shared `digin.db` schema |
+| `data/` | tracker lists, recorded sessions and captures used for training |
+| `docs/` | model details and numbers, original team brief |
 
-Unlisted is not the same as negative. Only add a domain to `content_negatives.txt` once it is
-confirmed as content. Whole first-party families can hide tracking hosts, so prefer exact
-hostnames.
+## Limits
 
-### Current numbers (honest)
+We see who an app talks to, never what it sends (traffic stays encrypted). Server-side tracking
+is invisible to any network tool. The model is trained on a few thousand domains from about 30
+apps, so it is demo-grade, and name clues are easy to fake, which is why it leans on behavior
+and CNAME chains.
 
-There are three test sets. Quote which one a number comes from.
+## Team
 
-| Set | What it is | Size |
-|---|---|---|
-| **A. Official held-out test** | `ml_eval/evaluate.py --holdout InMobi --holdout Vungle --skip-covered`: InMobi and Vungle removed from every list, then scored | 29 tracker domains, 61 content domains |
-| **B. Ten-company held-out runs** | the same method repeated ten times, holding out one company each time (A is one of them) | 144 tracker domains in total, the same 61 content domains each run |
-| **C. Fresh box sessions** | Maps, Spotify and Samsung Weather recorded on the box after the model was final; flags checked by name | 13 flags at 0.8 |
-
-A and B use data the features, allowlist and threshold were tuned on, so they are optimistic.
-C was never tuned on, but it is tiny. `--skip-covered` drops content domains on a list or
-allowlist and applies the scorer's login and call-server guards, which is what the box does.
-
-| Threshold | A: official held-out (29) | B: ten companies (144) | C: fresh box sessions |
-|---|---|---|---|
-| 0.8 | 18 caught (62%), 1 false, 95% precision | 107 caught (74%), mean precision 93% | 8 of 11 judged flags real, about 73% |
-| 0.9 | 15 caught (52%), 0 false | 86 caught (60%), mean precision 94% | about 73% |
-| 0.95 | 13 caught (45%), 0 false | 74 caught (51%), mean precision 94% (lowest company 67%) | 8 of 9 real, about 89% |
-
-List-only and rules-only baselines catch 0 of 29 in set A, because the held-out companies are
-removed from every list. Without `--skip-covered` (counting allowlisted infrastructure such as
-Akamai and fbcdn as possible false flags), precision in set A at 0.8 is 35%.
-
-The scorer writes every flag at 0.8 or more. The dashboard shows two tiers: **High confidence**
-(0.95 and up) and **Possible** (0.8 to 0.95). In set C the High confidence tier was 8 real
-trackers on no list (`atmtd.com` x3, `bids.ws`, `ureca-lab.com`, `rapidedge.io`, `weatherfx.com`,
-`em.weather.com`) and 1 false (`api.locketcamera.com`). The Possible tier had 4 hosts, at least 2
-of them content (`www5.whentowork.com`, `api.weather.com`). Verdicts should be confirmed by a
-second person.
-
-The scorer never scores login hosts (first-label tokens like `login`, `auth`, `sso`, `accounts`) or
-STUN/TURN call servers, because blocking either breaks the app and the model tends to score them high.
-
-The model is two gradient-boosting models routed by whether a domain has connection data
-(`raw_flows`), each an average of 15 models fit on resampled data to steady the scores. A single model had learned "no flow data" as a clue for "content" and missed
-trackers seen only in DNS logs; routing fixed that (AUC 0.93 to 0.97 across the ten companies).
-It uses the 13 base features plus 4 timing features. Compare feature groups with
-`python3 tools/ablate.py --db data/sessions/all.db`.
+**Aarav** (DNS, Shield, dashboard, integration) · **Pranshu** (box, hotspot, flow capture) ·
+**Samarth** (lists, CNAME uncloaking, evaluation, demo mode) · **Ved** (features, model, live scorer)

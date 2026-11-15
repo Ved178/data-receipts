@@ -1,4 +1,4 @@
--- digin.db contract (frozen, CLAUDE.md §5). Change only after posting in the team group.
+-- digin.db contract (frozen, docs/team-brief.md §5). Change only after posting in the team group.
 PRAGMA journal_mode=WAL;
 CREATE TABLE IF NOT EXISTS raw_lookups (
   id INTEGER PRIMARY KEY, ts REAL NOT NULL, device TEXT NOT NULL, session_id INTEGER,

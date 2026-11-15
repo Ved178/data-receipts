@@ -8,7 +8,7 @@ file is small enough to commit and the box never needs to be online.
 Big clouds (Google 15169, AWS, Cloudflare, Akamai...) are deliberately NOT here:
 they host content and ads alike, so "IP is Google's" says nothing.
 
-Exclusions (CLAUDE.md §6.1) are applied by ml.lists.load(), which builds an
+Exclusions (docs/team-brief.md §6.1) are applied by ml.lists.load(), which builds an
 AsnDB with the held-out companies removed. Use that, not AsnDB directly.
 """
 import bisect

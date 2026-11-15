@@ -1,7 +1,7 @@
 """Turn CSV exports of the box's digin.db tables into a digin.db-shaped SQLite file.
 
-    python3 -m ml_eval.import_box_csv --lookups data/box_raw_lookups.csv --flows data/box_raw_flows.csv \\
-        --sessions data/box_sessions.csv --out data/sessions/box1.db --keep Wikipedia BASELINE_IDLE
+    python3 -m ml_eval.import_box_csv --lookups data/box-exports/box_raw_lookups.csv --flows data/box-exports/box_raw_flows.csv \\
+        --sessions data/box-exports/box_sessions.csv --out data/sessions/box1.db --keep Wikipedia BASELINE_IDLE
 
 --keep names the sessions to import (default: all). --tagged-only drops lookups and flows that
 belong to no kept session (phone traffic between sessions, unknown app). Devices get a prefix
