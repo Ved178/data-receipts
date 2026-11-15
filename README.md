@@ -43,7 +43,7 @@ sqlite3 /tmp/test.db "select domain, round(score,2), reasons from ml_flags order
 `--loop 5` (stop with Ctrl-C). Insert rows into `raw_lookups` from another terminal and new flags
 appear on the next pass.
 
-Other flags: `--threshold 0.6` (lowest score written), `--models <dir>`, `--auto-block`.
+Other flags: `--threshold 0.8` (lowest score written; 0.8 is the default), `--models <dir>`, `--auto-block`.
 
 Check the tests and the held-out numbers:
 
@@ -117,22 +117,24 @@ rules-only baselines catch 0 of 29, since the held-out companies are removed fro
 
 | Threshold | Default harness (141 confirmed content domains, incl. infrastructure) | `--skip-covered` (61 content domains the box would actually score) |
 |---|---|---|
-| 0.5 | caught 23 of 29, 49 false flags, 32% precision | caught 23 of 29, 8 false, 74% precision |
-| 0.7 | caught 21 of 29, 35 false flags, 38% precision | caught 21 of 29, 3 false, 88% precision |
-| 0.8 | caught 21 of 29, 29 false flags, 42% precision | caught 21 of 29, **2 false, 91% precision**, 72% recall |
+| 0.7 | caught 18 of 29, 39 false flags, 32% precision | caught 18 of 29 (62%), 2 false, 90% precision |
+| 0.8 | caught 18 of 29, 34 false flags, 35% precision | caught 18 of 29 (62%), 1 false, 95% precision |
+| 0.9 | caught 16 of 29, 28 false flags, 36% precision | caught 16 of 29 (55%), 1 false, 94% precision |
 
 Why two columns: `ml/score.py` never scores a domain that is on a list or allowlist, so the
-right-hand column (`python3 -m ml_eval.evaluate ... --skip-covered`) is what the box does. 26 of
-the 28 default-harness false flags at 0.8 were allowlisted infrastructure (Akamai, akadns, fbcdn...).
-The allowlist is hand-reviewed and parts of it were chosen after seeing results, so treat the
-right-hand column as an upper estimate. The two remaining false flags at 0.8 are `login.aa.com` and
-`api.whatsapp.net`; we stopped fixing individual domains to avoid tuning to the test set.
+right-hand column (`python3 -m ml_eval.evaluate ... --skip-covered`) is what the box does. The
+default column counts allowlisted infrastructure (Akamai, akadns, fbcdn...) as possible false
+flags. The allowlist is hand-reviewed and parts of it were chosen after seeing results, so treat
+the right-hand column as an upper estimate.
 
-Other held-out companies at 0.8, same protocol: Unity Ads 12 of 25 caught with 2 false flags
-(86% precision), AppLovin 10 of 14 with 3 false (77%), Mintegral 8 of 14 with 2 false (80%).
-Precision varies by company, and the sample is small (each false flag is about 3 points).
+InMobi + Vungle is our best case. Across ten held-out companies (one at a time, same protocol,
+144 tracker domains in total): ranking AUC 0.91 to 1.00; at 0.8 the model catches 99 of 144 (69%)
+with at most 3 false flags per run among 61 content domains (mean precision 84%, lowest 75%); at
+0.9 it catches 82 of 144 (57%) with at most 2 false flags (mean precision 87%, lowest 71%). The sample is small:
+each false flag moves a percentage by several points. Quote counts and the range.
 
-Feature groups are compared with `python3 tools/ablate.py --db data/sessions/all.db`. The
-deployed model uses the 13 base features plus 4 timing features (first-contact delay, burst size,
-lookups per minute, re-contact after idle). Flow-shape and hostname-shape features are computed
-but left out, because they lowered precision on our small dataset.
+The model is two gradient-boosting models routed by whether a domain has connection data
+(`raw_flows`). A single model had learned "no flow data" as a clue for "content" and missed
+trackers seen only in DNS logs; routing fixed that (AUC 0.93 to 0.97 across the ten companies).
+It uses the 13 base features plus 4 timing features. Compare feature groups with
+`python3 tools/ablate.py --db data/sessions/all.db`.

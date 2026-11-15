@@ -25,7 +25,7 @@ from ml import reasons as reasons_mod
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODELS = os.path.join(HERE, "models")
-FLAG_THRESHOLD = 0.6
+FLAG_THRESHOLD = 0.8  # chosen from out-of-fold scores on ten held-out companies
 AUTO_BLOCK_THRESHOLD = 0.97
 LOCK_RETRIES = 5
 

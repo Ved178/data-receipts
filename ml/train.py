@@ -71,16 +71,38 @@ def _model(seed=0):
 
 
 class Model:
-    """HistGradientBoosting that ignores columns that are all-NaN in training (e.g. flow
-    features before raw_flows exists); sklearn's binning crashes on those."""
+    """Two HistGradientBoosting models, routed per row by whether flow data exists.
+
+    Why: rows without raw_flows (DNS-only sessions) and rows with it come from different sources
+    with different label mixes, so a single model learned "no flow data" as a clue for "content"
+    and missed DNS-only trackers. `noflow` never sees the flow columns; `flow` is fit only on
+    rows that have them. Columns that are all-NaN in training are dropped (sklearn's binning
+    crashes on those)."""
+    MIN_FLOW_ROWS = 20
 
     def __init__(self, X, y):
         import numpy as np
-        self.cols = ~np.isnan(X).all(axis=0)
-        self.clf = _model().fit(X[:, self.cols], y)
+        y = np.asarray(y)
+        flow = np.array([f.startswith("flow_") for f in feat.FEATURES])
+        self.key = feat.FEATURES.index("flow_bytes_up_ratio") if "flow_bytes_up_ratio" in feat.FEATURES else None
+        live = ~np.isnan(X).all(axis=0)
+        self.cols0 = live & ~flow                      # no-flow model: never sees flow columns
+        self.clf0 = _model().fit(X[:, self.cols0], y)
+        self.clf1 = None
+        if self.key is not None:
+            has = ~np.isnan(X[:, self.key])
+            if has.sum() >= self.MIN_FLOW_ROWS and min(y[has].sum(), (1 - y[has]).sum()) >= MIN_PER_CLASS:
+                self.cols1 = ~np.isnan(X[has]).all(axis=0)
+                self.clf1 = _model().fit(X[has][:, self.cols1], y[has])
 
     def predict_proba(self, X):
-        return self.clf.predict_proba(X[:, self.cols])
+        import numpy as np
+        p = self.clf0.predict_proba(X[:, self.cols0])
+        if self.clf1 is not None:
+            has = ~np.isnan(X[:, self.key])
+            if has.any():
+                p[has] = self.clf1.predict_proba(X[has][:, self.cols1])
+        return p
 
 
 def _fit(X, y):
