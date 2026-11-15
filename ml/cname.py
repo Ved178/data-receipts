@@ -16,7 +16,7 @@ CLI (runs on the box next to score.py; safe to run alongside it):
 
 Rule rows use model_version 'rules-v1' and status 'suspected'. They never overwrite a
 row written by the model (model_version not starting with 'rules'), nor a row a human
-set to dismissed/allowlisted. Domains already on a list are skipped: Shield handles
+set to dismissed/allowlisted/approved. Domains already on a list are skipped: Shield handles
 those; ml_flags is for what the lists miss.
 """
 import argparse
@@ -112,7 +112,7 @@ def write_flags(conn, flags, now=None):
         for dom, (score, reasons, first_ts) in flags.items():
             row = conn.execute("SELECT status, model_version FROM ml_flags WHERE domain=?",
                                (dom,)).fetchone()
-            if row and (row[0] in ("dismissed", "allowlisted")
+            if row and (row[0] in ("dismissed", "allowlisted", "approved")
                         or not row[1].startswith("rules")):
                 continue
             conn.execute(
