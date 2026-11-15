@@ -121,7 +121,7 @@ function renderBA(c){
   const after = slip("SHIELD ON", `${c.app} · ${dur(on.duration_s)} · ${on.lookups} lookups`,
     `<div class="big green">${on.companies_blocked}</div><div class="lbl">companies blocked</div>
      <div class="rule"></div>
-     <div class="row"><span>Tried anyway, not on any list</span><span class="dots"></span><b>${rv ? caught + missed : caught + "+"}</b></div>
+     <div class="row"><span>Tried anyway, not on our blocklists</span><span class="dots"></span><b>${rv ? caught + missed : caught + "+"}</b></div>
      <div class="row sub2"><span>● caught by our detector</span><span class="dots"></span><b class="amberk">${caught}</b></div>
      ${on.caught.map(tag).join("")}
      <div class="row sub2"><span>✗ missed</span><span class="dots"></span><b>${rv ? missed : "?"}</b></div>
