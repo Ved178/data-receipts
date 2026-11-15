@@ -1,0 +1,15 @@
+[Unit]
+Description=DigIn box at boot: Pranshu's hotspot + firewall, DNS hand-off, logger + dashboard
+After=NetworkManager.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/home/arduino/madhacks26/deploy/start_box.sh
+TimeoutStartSec=180
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
