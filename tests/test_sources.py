@@ -44,5 +44,29 @@ class TestSources(unittest.TestCase):
         self.assertFalse(L.is_allowlisted("ads.inmobi.com"))
 
 
+
+
+class TestRoutedModel(unittest.TestCase):
+    def test_rows_without_flow_data_use_the_noflow_model(self):
+        import numpy as np
+        from ml import train
+        rng = np.random.default_rng(0)
+        n, k = 120, len(features.FEATURES)
+        X = rng.normal(size=(n, k))
+        y = (X[:, 0] > 0).astype(int)
+        flow = [i for i, f in enumerate(features.FEATURES) if f.startswith("flow_")]
+        X[: n // 2][:, flow] = np.nan            # half the rows have no raw_flows
+        X[: n // 2, flow] = np.nan
+        m = train.Model(X, y)
+        self.assertIsNotNone(m.clf1)
+        p = m.predict_proba(X)
+        self.assertEqual(p.shape, (n, 2))
+        # a no-flow row's score must not change when flow columns are filled in elsewhere
+        a = m.predict_proba(X[:1])[0, 1]
+        self.assertFalse(np.isnan(a))
+        allnan = X.copy(); allnan[:, flow] = np.nan
+        self.assertEqual(train.Model(allnan, y).clf1, None)  # no flow data at all: still works
+
+
 if __name__ == "__main__":
     unittest.main()
