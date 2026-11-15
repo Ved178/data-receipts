@@ -152,6 +152,69 @@ class DashboardTest(unittest.TestCase):
         self.assertIsInstance(self.app.flags_map(self.app.db()), dict)
 
 
+class DetectorTest(unittest.TestCase):
+    """rules-v1: flags only names that are new with Shield ON, after an ad company was blocked."""
+
+    def setUp(self):
+        import detector
+        self.D = detector
+        self.dir = tempfile.mkdtemp()
+        self.db = os.path.join(self.dir, "digin.db")
+        conn = sqlite3.connect(self.db)
+        conn.executescript(open(os.path.join(ROOT, "db", "schema.sql")).read())
+        add = lambda sid, t, q, chain="[]", b=0: conn.execute(  # noqa: E731
+            "INSERT INTO raw_lookups(ts, device, session_id, qname, cname_chain, blocked, block_reason)"
+            " VALUES (?,?,?,?,?,?,?)", (1000 * sid + t, "10.42.0.9", sid, q, chain, b, "list" if b else None))
+        conn.execute("INSERT INTO sessions VALUES (1, '', 'Test Game', 1000, 1100)")   # Shield OFF
+        conn.execute("INSERT INTO sessions VALUES (2, '', 'Test Game', 2000, 2100)")   # Shield ON
+        add(1, 1, "api.testgame.com")
+        add(1, 2, "ads.vungle.com")
+        add(1, 3, "old-adnet.example")                      # seen with Shield OFF -> never new
+        add(2, 1, "early-thing.example")                    # before the first block -> not judged
+        add(2, 2, "ads.vungle.com", b=1)                    # Shield blocks an ad company
+        add(2, 3, "api.testgame.com")
+        add(2, 4, "old-adnet.example")
+        add(2, 5, "ssp-win.newadnet.io")                    # new + ad words -> flagged
+        add(2, 6, "img.contentthing.org")                   # new, no ad words -> flagged, lower score
+        add(2, 7, "d1234.cloudfront.net")                   # plain CDN -> never
+        add(2, 8, "x.gstatic.com")                          # allowlisted -> never
+        add(2, 9, "gateway.icloud.com")                     # phone background -> never
+        add(2, 10, "doubleclick.net")                       # already on a list -> never (Shield's job)
+        add(2, 11, "trk.cloakhost.net", '["ads.vungle.com"]')  # CNAME to a known tracker -> flagged, high
+        conn.commit()
+        self.conn = conn
+
+    def tearDown(self):
+        self.conn.close()
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_flags_only_new_after_block(self):
+        flags = {f["domain"]: f for f in self.D.detect(self.conn)}
+        self.assertEqual(set(flags), {"newadnet.io", "contentthing.org", "cloakhost.net"})
+        self.assertGreater(flags["newadnet.io"]["score"], flags["contentthing.org"]["score"])
+        self.assertGreater(flags["cloakhost.net"]["score"], flags["contentthing.org"]["score"])
+        self.assertTrue(any("ssp" in r for r in flags["newadnet.io"]["reasons"]))
+        self.assertTrue(any("Shield-OFF" in r for r in flags["contentthing.org"]["reasons"]))
+        for f in flags.values():
+            self.assertTrue(0 <= f["score"] <= 1)
+
+    def test_no_baseline_no_flags(self):
+        self.conn.execute("DELETE FROM raw_lookups WHERE session_id=1")
+        self.assertEqual(self.D.detect(self.conn), [])
+
+    def test_never_overwrites_other_models_and_keeps_user_choice(self):
+        self.conn.execute("INSERT INTO ml_flags VALUES ('newadnet.io', 0.99, '[\"ved\"]', 'auto_blocked', 'hgb-v2', 1, 1)")
+        self.conn.commit()
+        self.D.write_flags(self.conn, self.D.detect(self.conn))
+        row = self.conn.execute("SELECT score, status, model_version FROM ml_flags WHERE domain='newadnet.io'").fetchone()
+        self.assertEqual(row, (0.99, "auto_blocked", "hgb-v2"))
+        self.conn.execute("UPDATE ml_flags SET status='dismissed' WHERE domain='contentthing.org'")
+        self.conn.commit()
+        self.D.write_flags(self.conn, self.D.detect(self.conn))
+        row = self.conn.execute("SELECT status, model_version FROM ml_flags WHERE domain='contentthing.org'").fetchone()
+        self.assertEqual(row, ("dismissed", "rules-v1"))
+
+
 class DeployScriptsTest(unittest.TestCase):
     def test_shell_syntax(self):
         for name in ["start_box.sh", "fallback_dnsmasq.sh"]:
