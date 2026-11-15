@@ -28,7 +28,12 @@ def _ts(v):
     try:
         x = float(v)
     except (TypeError, ValueError):
-        return None
+        # PCAPdroid CSVs use ISO strings, e.g. 2026-11-14T14:11:14.889-06:00
+        try:
+            from datetime import datetime
+            return datetime.fromisoformat(str(v).strip()).timestamp()
+        except ValueError:
+            return None
     return x / 1000.0 if x > 1e11 else x
 
 
@@ -39,12 +44,20 @@ def _int(v):
         return None
 
 
-def import_csv(conn, path, next_session):
+def import_csv(conn, path, next_session, background="drop"):
     device = os.path.splitext(os.path.basename(path))[0]
     sessions = {}
     n_l = n_f = 0
     with open(path, errors="replace", newline="") as f:
         rows = list(csv.DictReader(f))
+    if background == "drop" and rows:
+        # One capture = one app. Rows from other apps (Google Play services, Meta Services...)
+        # are phone background traffic; keeping them would fake cross-app and co-occurrence signals.
+        key = next((k for k in rows[0] if k and k.strip().lower() == "app"), None)
+        if key:
+            from collections import Counter
+            main = Counter((r[key] or "?").strip() for r in rows).most_common(1)[0][0]
+            rows = [r for r in rows if (r[key] or "?").strip() == main]
     # map headers case-insensitively
     def g(r, *keys):
         for k in keys:
@@ -90,12 +103,14 @@ def main(argv=None):
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("csv", nargs="+")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--background", choices=("drop", "keep"), default="drop",
+                    help="drop (default): keep only each file's main app; keep: import all apps")
     a = ap.parse_args(argv)
     conn = create_db(a.out)
     nxt = (conn.execute("SELECT MAX(session_id) FROM sessions").fetchone()[0] or 0) + 1
     with conn:
         for p in a.csv:
-            nxt, nl, nf, ns = import_csv(conn, p, nxt)
+            nxt, nl, nf, ns = import_csv(conn, p, nxt, a.background)
             print(f"{p}: {ns} sessions, {nl} lookups, {nf} flows")
     return 0
 

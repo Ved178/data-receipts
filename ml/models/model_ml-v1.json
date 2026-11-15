@@ -1,0 +1,22 @@
+{
+ "version": "ml-v1",
+ "features": [
+  "n_apps",
+  "cname_depth",
+  "cname_to_tracker",
+  "first_party_cname",
+  "asn_ad_network",
+  "co_occur_lift",
+  "launch_burst",
+  "periodicity",
+  "flow_bytes_up_ratio",
+  "flow_interval_cv",
+  "name_ad_tokens",
+  "ip_generic_infra",
+  "own_app_domain"
+ ],
+ "heldout": [],
+ "n_pos": 426,
+ "n_neg": 140,
+ "trained": "2026-11-15T01:54:37"
+}

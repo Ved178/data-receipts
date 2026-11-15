@@ -1,0 +1,17 @@
+# Infrastructure / platform domains: never flag, never block. One suffix per line.
+# These are CDN, DNS-steering and OS/productivity plumbing whose long CNAME chains and
+# heavy downloads look tracker-like to the model. Merged into lists.ALLOWLIST at import.
+# Hand-written from observed false flags in our captures; not derived from model output.
+aaplimg.com
+apple-dns.net
+akadns.net
+akamai.net
+office365.com
+office.com
+ln-msedge.net
+jquery.com
+fbcdn.net
+cdninstagram.com
+spotifycdn.com
+scdn.co
+sc-cdn.net

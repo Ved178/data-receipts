@@ -98,7 +98,7 @@ def parse_log(lines, year, pid=None):
 
 
 def parse_sessions(specs, year, date_of):
-    """'App=HH:MM-HH:MM' (UTC, on date_of's day) -> [(app, start_ts, end_ts)]."""
+    """'App=HH:MM[:SS]-HH:MM[:SS]' (UTC, on date_of's day) -> [(app, start_ts, end_ts)]."""
     day0 = date_of - (date_of % 86400)
     out = []
     for s in specs:
@@ -106,10 +106,10 @@ def parse_sessions(specs, year, date_of):
         a, _, b = win.partition("-")
         t = []
         for x in (a, b):
-            h, m = (int(v) for v in x.split(":"))
-            t.append(day0 + h * 3600 + m * 60)
+            parts = [int(v) for v in x.split(":")]  # HH:MM or HH:MM:SS
+            t.append(day0 + parts[0] * 3600 + parts[1] * 60 + (parts[2] if len(parts) > 2 else 0))
         if not app or t[1] <= t[0]:
-            raise ValueError(f"bad --session {s!r}; want 'App=HH:MM-HH:MM'")
+            raise ValueError(f"bad --session {s!r}; want 'App=HH:MM[:SS]-HH:MM[:SS]'")
         out.append((app, t[0], t[1]))
     return out
 

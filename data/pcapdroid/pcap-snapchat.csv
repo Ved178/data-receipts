@@ -1,0 +1,47 @@
+IPProto,SrcIP,SrcPort,DstIp,DstPort,UID,App,PackageName,Proto,Status,Info,BytesSent,BytesRcvd,PktsSent,PktsRcvd,FirstSeen,LastSeen
+17,10.215.173.1,45577,10.215.173.2,53,10227,Google Play services,com.google.android.gms,DNS,Closed,mtalk.google.com,62,117,1,1,2026-11-14T22:52:24.264-06:00,2026-11-14T22:52:24.271-06:00
+6,10.215.173.1,59710,172.217.68.188,5228,10227,Google Play services,com.google.android.gms,TLS,Closed,mtalk.google.com,2624,2278,8,8,2026-11-14T22:52:24.278-06:00,2026-11-14T22:52:24.447-06:00
+17,10.215.173.1,22585,10.215.173.2,53,10067,Meta Services,com.facebook.services,DNS,Closed,z-m-gateway.facebook.com,70,126,1,1,2026-11-14T22:52:25.724-06:00,2026-11-14T22:52:25.751-06:00
+17,10.215.173.1,22192,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,app-analytics-v2.snapchat.com,75,91,1,1,2026-11-14T22:52:25.885-06:00,2026-11-14T22:52:25.902-06:00
+17,10.215.173.1,53077,35.244.195.33,443,10348,Snapchat,com.snapchat.android,QUIC,Closed,app-analytics-v2.snapchat.com,99204,8861,148,111,2026-11-14T22:52:25.909-06:00,2026-11-14T22:53:21.652-06:00
+6,10.215.173.1,47588,35.244.195.33,443,10348,Snapchat,com.snapchat.android,HTTPS,Closed,app-analytics-v2.snapchat.com,943,1038,6,5,2026-11-14T22:52:25.910-06:00,2026-11-14T22:52:26.031-06:00
+6,10.215.173.1,39988,157.240.254.33,443,10067,Meta Services,com.facebook.services,HTTPS,Closed,z-m-gateway.facebook.com,3297,4306,17,10,2026-11-14T22:52:26.114-06:00,2026-11-14T22:52:57.068-06:00
+17,10.215.173.1,61146,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,aws.duplex.snapchat.com,69,223,1,1,2026-11-14T22:52:26.344-06:00,2026-11-14T22:52:26.361-06:00
+17,10.215.173.1,24273,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,aws.duplex.snapchat.com,69,146,1,1,2026-11-14T22:52:26.354-06:00,2026-11-14T22:52:26.361-06:00
+6,10.215.173.1,57936,52.206.150.125,443,10348,Snapchat,com.snapchat.android,HTTPS,Closed,aws.duplex.snapchat.com,3384,10501,35,35,2026-11-14T22:52:26.369-06:00,2026-11-14T22:53:11.819-06:00
+17,10.215.173.1,13139,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,firebaselogging.googleapis.com,76,204,1,1,2026-11-14T22:52:26.397-06:00,2026-11-14T22:52:26.407-06:00
+17,10.215.173.1,27554,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,us-east1-aws.api.snapchat.com,75,131,1,1,2026-11-14T22:52:26.403-06:00,2026-11-14T22:52:26.410-06:00
+6,10.215.173.1,36888,44.202.21.20,443,10348,Snapchat,com.snapchat.android,HTTPS,Closed,us-east1-aws.api.snapchat.com,80350,79421,457,477,2026-11-14T22:52:26.413-06:00,2026-11-14T22:53:19.389-06:00
+6,10.215.173.1,58858,172.217.118.4,443,10348,Snapchat,com.snapchat.android,HTTPS,Closed,firebaselogging.googleapis.com,1967,4871,8,7,2026-11-14T22:52:26.423-06:00,2026-11-14T22:52:26.599-06:00
+17,10.215.173.1,50428,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,gcp.api.snapchat.com,66,113,1,1,2026-11-14T22:52:26.710-06:00,2026-11-14T22:52:26.724-06:00
+17,10.215.173.1,58403,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,usc1-gcp-v61.api.snapchat.com,75,131,1,1,2026-11-14T22:52:26.718-06:00,2026-11-14T22:52:26.724-06:00
+6,10.215.173.1,36894,44.202.21.20,443,10348,Snapchat,com.snapchat.android,HTTPS,Closed,us-east1-aws.api.snapchat.com,801,4207,5,4,2026-11-14T22:52:26.720-06:00,2026-11-14T22:52:26.787-06:00
+17,10.215.173.1,36136,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,usc1-gcp-v62.api.snapchat.com,75,131,1,1,2026-11-14T22:52:26.721-06:00,2026-11-14T22:52:26.725-06:00
+17,10.215.173.1,34990,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,us-east4-gcp.api.snapchat.com,75,131,1,1,2026-11-14T22:52:26.722-06:00,2026-11-14T22:52:26.725-06:00
+17,10.215.173.1,62363,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,aws-proxy-gcp.api.snapchat.com,76,133,1,1,2026-11-14T22:52:26.723-06:00,2026-11-14T22:52:26.731-06:00
+17,10.215.173.1,36684,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,aws.api.snapchat.com,66,140,1,1,2026-11-14T22:52:26.723-06:00,2026-11-14T22:52:26.731-06:00
+17,10.215.173.1,46211,35.190.43.134,443,10348,Snapchat,com.snapchat.android,QUIC,Closed,us-east4-gcp.api.snapchat.com,226794,386988,413,492,2026-11-14T22:52:26.728-06:00,2026-11-14T22:53:21.652-06:00
+17,10.215.173.1,34877,35.190.43.134,443,10348,Snapchat,com.snapchat.android,QUIC,Closed,us-east4-gcp.api.snapchat.com,1746,4697,7,5,2026-11-14T22:52:26.729-06:00,2026-11-14T22:52:26.808-06:00
+17,10.215.173.1,37981,35.190.43.134,443,10348,Snapchat,com.snapchat.android,QUIC,Closed,us-east4-gcp.api.snapchat.com,1754,4144,5,5,2026-11-14T22:52:26.730-06:00,2026-11-14T22:52:26.785-06:00
+17,10.215.173.1,59952,35.190.43.134,443,10348,Snapchat,com.snapchat.android,QUIC,Closed,aws-proxy-gcp.api.snapchat.com,1817,3281,6,3,2026-11-14T22:52:26.737-06:00,2026-11-14T22:52:26.771-06:00
+17,10.215.173.1,53348,34.120.159.232,443,10348,Snapchat,com.snapchat.android,QUIC,Closed,usc1-gcp-v62.api.snapchat.com,1747,4189,7,6,2026-11-14T22:52:26.739-06:00,2026-11-14T22:52:26.831-06:00
+6,10.215.173.1,36904,44.202.21.20,443,10348,Snapchat,com.snapchat.android,HTTPS,Closed,aws.api.snapchat.com,2723,5598,16,15,2026-11-14T22:52:26.743-06:00,2026-11-14T22:52:29.452-06:00
+17,10.215.173.1,29802,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,us-central1-gcp.api.snapchat.com,78,137,1,1,2026-11-14T22:52:26.749-06:00,2026-11-14T22:52:26.753-06:00
+17,10.215.173.1,46215,35.190.43.134,443,10348,Snapchat,com.snapchat.android,QUIC,Closed,us-central1-gcp.api.snapchat.com,1818,4144,6,5,2026-11-14T22:52:26.757-06:00,2026-11-14T22:52:26.815-06:00
+6,10.215.173.1,43682,35.190.43.134,443,10348,Snapchat,com.snapchat.android,HTTPS,Closed,us-central1-gcp.api.snapchat.com,881,4939,7,6,2026-11-14T22:52:26.759-06:00,2026-11-14T22:52:26.875-06:00
+17,10.215.173.1,1945,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,cf-st.sc-cdn.net,62,78,1,1,2026-11-14T22:52:28.830-06:00,2026-11-14T22:52:28.842-06:00
+17,10.215.173.1,38059,3.163.245.4,443,10348,Snapchat,com.snapchat.android,QUIC,Closed,cf-st.sc-cdn.net,333090,9654781,1217,6723,2026-11-14T22:52:28.853-06:00,2026-11-14T22:53:19.581-06:00
+17,10.215.173.1,9515,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,bolt-gcdn.sc-cdn.net,66,82,1,1,2026-11-14T22:52:29.206-06:00,2026-11-14T22:52:29.212-06:00
+17,10.215.173.1,47259,35.241.16.93,443,10348,Snapchat,com.snapchat.android,QUIC,Closed,bolt-gcdn.sc-cdn.net,4876,76295,48,75,2026-11-14T22:52:29.216-06:00,2026-11-14T22:53:00.023-06:00
+6,10.215.173.1,50956,35.241.16.93,443,10348,Snapchat,com.snapchat.android,HTTPS,Closed,bolt-gcdn.sc-cdn.net,881,5324,7,6,2026-11-14T22:52:29.266-06:00,2026-11-14T22:52:29.435-06:00
+6,10.215.173.1,50256,3.163.245.4,443,10348,Snapchat,com.snapchat.android,HTTPS,Closed,cf-st.sc-cdn.net,1165,6489,8,9,2026-11-14T22:52:29.363-06:00,2026-11-14T22:52:29.467-06:00
+17,10.215.173.1,43971,34.120.159.232,443,10348,Snapchat,com.snapchat.android,QUIC,Closed,usc1-gcp-v62.api.snapchat.com,36277,59045,72,71,2026-11-14T22:52:30.766-06:00,2026-11-14T22:52:50.866-06:00
+17,10.215.173.1,36352,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,aw.sc-cdn.net,59,75,1,1,2026-11-14T22:52:59.629-06:00,2026-11-14T22:52:59.743-06:00
+6,10.215.173.1,58652,34.98.105.85,443,10348,Snapchat,com.snapchat.android,HTTPS,Closed,aw.sc-cdn.net,1745,5711,14,17,2026-11-14T22:52:59.749-06:00,2026-11-14T22:53:16.515-06:00
+17,10.215.173.1,2015,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,gcs.sc-cdn.net,60,104,1,1,2026-11-14T22:52:59.773-06:00,2026-11-14T22:52:59.786-06:00
+17,10.215.173.1,56367,34.149.130.113,443,10348,Snapchat,com.snapchat.android,QUIC,Closed,gcs.sc-cdn.net,2108,5920,11,9,2026-11-14T22:52:59.794-06:00,2026-11-14T22:53:00.071-06:00
+17,10.141.233.45,59834,142.250.177.238,443,10229,Google Play Store,com.android.vending,QUIC,Closed,,381,783,4,5,2026-11-14T22:52:59.802-06:00,2026-11-14T22:53:00.061-06:00
+6,10.215.173.1,57368,34.149.130.113,443,10348,Snapchat,com.snapchat.android,HTTPS,Closed,gcs.sc-cdn.net,961,5432,9,8,2026-11-14T22:52:59.844-06:00,2026-11-14T22:53:00.120-06:00
+17,10.215.173.1,15758,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,aws.api.snapchat.com,66,217,1,1,2026-11-14T22:53:18.951-06:00,2026-11-14T22:53:18.959-06:00
+17,10.215.173.1,65307,10.215.173.2,53,10348,Snapchat,com.snapchat.android,DNS,Closed,aws.api.snapchat.com,66,140,1,1,2026-11-14T22:53:18.953-06:00,2026-11-14T22:53:18.962-06:00
+6,10.215.173.1,59486,44.202.21.3,443,10348,Snapchat,com.snapchat.android,HTTPS,Closed,aws.api.snapchat.com,2527,71725,20,32,2026-11-14T22:53:18.971-06:00,2026-11-14T22:53:19.293-06:00

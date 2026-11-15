@@ -19,27 +19,74 @@ there is no raw_flows data for the domain. n_lookups is stored but not a model f
 import bisect
 import json
 import math
+import os
+import re
 import statistics
 from collections import defaultdict
 
 from ml import cname as cname_mod
+from ml.lists import norm as lists_norm
 
 NAN = float("nan")
 
 FEATURES = [
-    "n_apps",             # distinct sessions it appeared in
+    "n_apps",             # distinct apps (by session app_name) it appeared in
     "cname_depth",        # max CNAME hops seen
     "cname_to_tracker",   # 0/1 chain passes through a known tracker (via L)
     "first_party_cname",  # 0/1 app's own subdomain that CNAMEs to another org
     "asn_ad_network",     # 0/1 an answer IP is on an ad/analytics network (via L)
-    "co_occur_rate",      # share of lookups within 2 s of a known-tracker lookup
+    "co_occur_lift",      # co_occur_rate minus its session's baseline (ad-heavy apps make everything co-occur)
     "launch_burst",       # 0/1 first seen within 10 s of a session start
     "periodicity",        # CV of gaps between repeat lookups (NaN if < 3 lookups)
     "flow_bytes_up_ratio",    # flows: up / (up + down)
     "flow_interval_cv",       # flows: regularity of connection starts
+    "name_ad_tokens",     # 0-3 tracker-ish words in the hostname (ads, telemetry, sdk...); easy to fake
+    "ip_generic_infra",   # 0/1 an answer IP is in a generic CDN/cloud network (NaN: no IPs/ASN db)
+    "own_app_domain",     # 0/1 belongs to the company/name of an app it was seen in (content)
 ]
 EXTRA_COLUMNS = ["n_lookups"]  # kept for reports, not fed to the model
 
+NAME_TOKENS = {"ad", "ads", "adserver", "adx", "adsystem", "track", "tracking", "tracker", "telemetry",
+               "analytics", "metrics", "events", "event", "beacon", "pixel", "sdk", "ssp", "rtb", "bid",
+               "stats", "logs", "logging", "crash", "crashlytics", "collect", "tag", "tags", "attribution"}
+INFRA_ORGS = ("akamai", "amazon", "cloudflare", "fastly", "microsoft", "apple", "google", "edgecast",
+              "edgio", "limelight", "azure")
+ASN_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "GeoLite2-ASN.mmdb")
+_asn = [None, False]  # [reader, tried]
+
+
+def _asn_reader():
+    if not _asn[1]:
+        _asn[1] = True
+        try:
+            import maxminddb
+            _asn[0] = maxminddb.open_database(ASN_PATH)
+        except Exception:  # library or file missing: feature stays NaN
+            _asn[0] = None
+    return _asn[0]
+
+
+def _infra_ip(ips):
+    r = _asn_reader()
+    if r is None or not ips:
+        return NAN
+    for ip in ips:
+        try:
+            org = ((r.get(ip) or {}).get("autonomous_system_organization") or "").lower()
+        except Exception:
+            continue
+        if any(o in org for o in INFRA_ORGS):
+            return 1
+    return 0
+
+
+def _name_tokens(name):
+    labels = re.split(r"[^a-z]+", (name or "").lower())
+    return min(3, len({t for t in labels if t in NAME_TOKENS}))
+
+
+GENERIC_APP_WORDS = {"game", "games", "app", "simulator", "racing", "shopping", "airlines", "music",
+                     "unknown", "video", "free", "play"}
 CO_WINDOW = 2.0
 LAUNCH_WINDOW = 10.0
 _SLD = {"co", "com", "org", "net", "gov", "ac", "edu"}
@@ -86,15 +133,34 @@ def build(conn, L, since_ts=None):
         if name:
             by[name].append(r)
 
+    # co-occurrence flag per lookup and per-session baseline over non-tracker lookups
+    cof = {}
+    base_n, base_c = defaultdict(int), defaultdict(int)
+    for r in rows:
+        nm = (r[3] or "").lower().strip(".")
+        i = bisect.bisect_left(tracker_ts, r[0] - CO_WINDOW)
+        j = bisect.bisect_right(tracker_ts, r[0] + CO_WINDOW)
+        trk = bool(nm) and L.is_tracker(nm)
+        cof[id(r)] = (j - i - (1 if trk and j > i else 0)) > 0
+        if not trk:
+            base_n[r[2]] += 1
+            base_c[r[2]] += cof[id(r)]
     ip_dom = defaultdict(set)  # (device, ip) -> domains, for flow mapping
     out = {}
     for dom, rs in by.items():
-        sids = {r[2] for r in rs if r[2] is not None}
+        # distinct APPS, not sessions: two Block Blast sessions are one app
+        sids = {sess[r[2]][0].lower() if r[2] in sess else r[2] for r in rs if r[2] is not None}
         depth = 0
+        chain_known = False  # NULL cname_chain = source has no CNAME data (e.g. PCAPdroid)
         c2t = fp = asn = 0
         launch = 0
         co = 0
-        for ts, dev, sid, _n, chain_s, ips_s in rs:
+        own_app = 0
+        infra = NAN
+        bl = []
+        for r in rs:
+            ts, dev, sid, _n, chain_s, ips_s = r
+            chain_known = chain_known or chain_s is not None
             chain = [c.lower().strip(".") for c in _loads(chain_s)]
             ips = _loads(ips_s)
             depth = max(depth, len(chain))
@@ -104,26 +170,37 @@ def build(conn, L, since_ts=None):
                 c2t = 1
             if cname_mod.ad_network_ips(ips, L):
                 asn = 1
+            ii = _infra_ip(ips)
+            if ii == ii:
+                infra = max(ii, 0 if infra != infra else infra)
             app, start = sess.get(sid, (None, None))
+            if app and not own_app:
+                reg = lists_norm(registrable(dom))
+                words = [w for w in re.split(r"[^a-z0-9]+", app.lower())
+                         if len(w) >= 4 and w not in GENERIC_APP_WORDS]
+                if L.same_company(dom, app) or any(w in reg for w in words):
+                    own_app = 1
             if app and chain and L.same_company(dom, app) and \
                     any(not L.same_company(h, app) and registrable(h) != registrable(dom)
                         for h in chain):
                 fp = 1
             if start is not None and 0 <= ts - start <= LAUNCH_WINDOW:
                 launch = 1
-            i = bisect.bisect_left(tracker_ts, ts - CO_WINDOW)
-            j = bisect.bisect_right(tracker_ts, ts + CO_WINDOW)
-            # the domain's own lookup does not count as "another tracker"
-            own = 1 if L.is_tracker(dom) and j > i else 0
-            co += (j - i - own) > 0
+            co += cof[id(r)]
+            bl.append(base_c[sid] / base_n[sid] if base_n.get(sid) else 0.0)
         ts_list = [r[0] for r in rs]
         gaps = [b - a for a, b in zip(ts_list, ts_list[1:]) if b - a > 0]
         out[dom] = {
-            "n_apps": len(sids), "cname_depth": depth, "cname_to_tracker": c2t,
-            "first_party_cname": fp, "asn_ad_network": asn,
-            "co_occur_rate": co / len(rs), "launch_burst": launch,
+            "n_apps": len(sids),
+            "cname_depth": depth if chain_known else NAN,
+            "cname_to_tracker": c2t if chain_known else NAN,
+            "first_party_cname": fp if chain_known else NAN, "asn_ad_network": asn,
+            "co_occur_rate": co / len(rs),
+            "co_occur_lift": co / len(rs) - (sum(bl) / len(bl) if bl else 0.0), "launch_burst": launch,
             "periodicity": _cv(gaps) if len(gaps) >= 2 else NAN,
-            "flow_bytes_up_ratio": NAN, "flow_interval_cv": NAN, "n_lookups": len(rs),
+            "flow_bytes_up_ratio": NAN, "flow_interval_cv": NAN,
+            "name_ad_tokens": _name_tokens(dom), "ip_generic_infra": infra, "own_app_domain": own_app,
+            "n_lookups": len(rs),
         }
     _add_flows(conn, out, ip_dom, since_ts)
     return out

@@ -1,0 +1,12 @@
+run11 — YouTube. Shield OFF, test phone 10.42.0.33 (Android).
+Times UTC (board clock = Chicago + 6 h). File: run11_youtube.log (02:10:22 - 02:11:00)
+Copied from the live window; covers about 40 s, starting around app launch. Short session.
+
+First party (Google/YouTube): www.youtube.com, s.youtube.com (YouTube stats/telemetry),
+yt3.ggpht.com (channel images), redirector.googlevideo.com + rr1/rr2---sn-...googlevideo.com
+(video streams), suggestqueries.google.com (search suggestions), feedback-pa / notifications-pa.googleapis.com.
+Tracking/ads: app-measurement.com (Firebase Analytics), ad.doubleclick.net (Google ads) at 02:10:46.
+Note: YouTube ads are served from the same Google domains as the videos, so they cannot be
+blocked by DNS without breaking YouTube. Good example of a first-party tracker.
+
+Noise to ignore: Snapchat 02:10:57-02:10:59, play-fe.googleapis.com (Play Store).
