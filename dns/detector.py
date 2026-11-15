@@ -56,7 +56,11 @@ INFRA = ("cloudfront.net", "akamai.net", "akamaiedge.net", "akamaized.net", "aka
          "edgekey.net", "edgesuite.net", "fastly.net", "fastlylb.net", "cdn77.org", "cloudflare.net",
          "cloudflare.com", "azureedge.net", "trafficmanager.net", "amazonaws.com", "elasticbeanstalk.com",
          "googleusercontent.com", "googleapis.com", "gstatic.com", "aliyuncs.com", "aliyuncsslbintl.com",
-         "alicdn.com", "jsdelivr.net", "llnwd.net", "b-cdn.net")
+         "alicdn.com", "jsdelivr.net", "llnwd.net", "b-cdn.net",
+         # Microsoft Azure (Knife Hit's own API on kapublicapiprod.azurewebsites.net was a false flag)
+         "azurewebsites.net", "azure.com", "cloudapp.net", "windows.net", "azurefd.net", "msedge.net",
+         "azure-api.net", "core.windows.net",
+         "firebaseapp.com", "web.app", "herokuapp.com", "digitaloceanspaces.com", "oraclecloud.com")
 TWO_PART_SUFFIX = {"co", "com", "net", "org", "gov", "ac", "edu"}
 
 
@@ -201,6 +205,9 @@ def detect(conn, only_session=None):
                     continue  # already on a list: Shield's job, not a new catch
                 if own_company(q, app, L) or own_company(d, app, L):
                     continue
+                co = L.company(q) or L.company(d)
+                if co and company.by_function([q], co[1]) == "Content":
+                    continue  # a known, non-tracking company (e.g. Microsoft cloud) without ad words
                 tracker_hop = next((c for c in chain if L.tracker(c)), None)
                 if is_infra(q) and not tracker_hop:
                     continue
@@ -239,7 +246,7 @@ def detect(conn, only_session=None):
     return out
 
 
-def write_flags(conn, flags):
+def write_flags(conn, flags, prune=True):
     """Upsert our rows only. Rows from other model versions are never touched; on our own rows a
     person's status choice (auto_blocked / dismissed) is kept."""
     now = time.time()
@@ -253,6 +260,14 @@ def write_flags(conn, flags):
                 " updated_ts=excluded.updated_ts WHERE ml_flags.model_version=?",
                 (f["domain"], f["score"], json.dumps(f["reasons"]), MODEL_VERSION, now, now, MODEL_VERSION))
             written += cur.rowcount
+        # Drop our own stale suggestions that the rules no longer produce (e.g. after a fix).
+        # Rows a person acted on (auto_blocked / dismissed) and other models' rows stay.
+        if prune:
+            keep = [f["domain"] for f in flags]
+            sql = "DELETE FROM ml_flags WHERE model_version=? AND status='suspected'"
+            if keep:
+                sql += f" AND domain NOT IN ({','.join('?' * len(keep))})"
+            conn.execute(sql, (MODEL_VERSION, *keep))
     return written
 
 
@@ -276,7 +291,7 @@ def main():
                         print(f"        - {r}")
                 print(f"{len(flags)} flagged ({time.time() - t0:.2f} s)")
             else:
-                n = write_flags(conn, flags)
+                n = write_flags(conn, flags, prune=a.session is None)  # never prune from a partial run
                 if not a.loop or n:
                     print(f"[detector] {len(flags)} flagged, {n} rows written ({time.time() - t0:.2f} s)", flush=True)
             conn.close()
