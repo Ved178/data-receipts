@@ -13,3 +13,7 @@ gstatic.com
 cloudfront.net
 akamaized.net
 fastly.net
+# From Pranshu's tests: blocking these breaks the phone's internet check, Instagram or Block Blast
+www.google.com
+graph.facebook.com
+afafb.com
