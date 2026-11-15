@@ -21,3 +21,65 @@ bikerace.com
 bikerace.me
 jquery.com
 samsungcloud.com
+# added after run4-12 review: OS/Apple, WhatsApp, CDN, Slack/Microsoft, games' own backends (confirmed from notes)
+aaplimg.com
+apple-dns.net
+itunes-apple.com.akadns.net
+gc-apple.com.akadns.net
+lb-apple.com.akadns.net
+edge-itunes-apple.com.akadns.net
+whatsapp.net
+akamai.net
+slack.com
+office365.com
+office.com
+ln-msedge.net
+playfabapi.com
+braincloudservers.com
+mg-techdev.app
+gamigo.com
+licdn.cn
+sc-gw.com
+sc-cdn.net
+
+# batch 3 (Spotify capture, own domains)
+spotify.com
+spotifycdn.com
+scdn.co
+tospotify.com
+
+# batch 4 (NYT, Tinder, Walmart, Target, Depop, airline captures): specific hostnames only.
+# First-party analytics/ad hosts (a.nytimes.com, smetrics.aa.com, analytics.mobile.walmart.com,
+# advertising.walmart.com, data.gotinder.com, t.company-target.com...) are deliberately NOT here.
+www.nytimes.com
+static01.nytimes.com
+static.nytimes.com
+static01.nyt.com
+myaccount.nytimes.com
+samizdat-graphql.nytimes.com
+g1.nyt.com
+vp.nyt.com
+api.gotinder.com
+images-ssl.gotinder.com
+static-assets.gotinder.com
+www.walmart.com
+identity.walmart.com
+walmartimages.com
+api.target.com
+carts.target.com
+profile.target.com
+redsky.target.com
+sapphire-api.target.com
+api.depop.com
+media-photos.depop.com
+www.aa.com
+cdn.aa.com
+login.aa.com
+www.united.com
+mobileapi.united.com
+mobiletravelapi.united.com
+media.united.com
+cloudflare-dns.com
+dns.google
+materialdesignicons.com
+createjs.com

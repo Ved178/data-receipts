@@ -61,7 +61,11 @@ def _group(L, d):
 
 
 def _model(seed=0):
-    from sklearn.ensemble import HistGradientBoostingClassifier
+    from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
+    if os.environ.get("ML_MODEL", "hgb") == "rf":
+        return RandomForestClassifier(n_estimators=200, min_samples_leaf=2, max_features="sqrt",
+                                      class_weight="balanced_subsample", random_state=seed,
+                                      n_jobs=1)
     return HistGradientBoostingClassifier(max_depth=3, max_iter=100, learning_rate=0.1,
                                           class_weight="balanced", random_state=seed)
 

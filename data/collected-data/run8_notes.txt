@@ -1,0 +1,15 @@
+run8 — RollerCoaster game. Shield OFF, test phone 10.42.0.33 (Android).
+Times UTC (board clock = Chicago + 6 h). File: run8_rollercoaster.log (01:53:17 - 01:56:32)
+Copied from the live window, so the first part of the launch may be missing.
+
+Label: LOW-TRACKER app (useful as a clean negative example).
+- Only game call seen: 773f5.playfabapi.com (Microsoft PlayFab game backend, CNAME to Azure Front Door)
+  at 01:56:04. No ad SDKs, no analytics SDKs seen in this window.
+- From ~01:53:58 to 01:56:01 the only lookups are www.google.com every ~30 s
+  (Android connectivity check), i.e. the game made no other network requests.
+
+Noise to ignore (not the game):
+- 01:53:17-01:53:20 MakeMyTrip (makemytrip.com) + Adobe tag manager (assets.adobedtm.com),
+  + crashlyticsreports-pa.googleapis.com: leftover from another app.
+- 01:56:13-01:56:20 Samsung (dls.di.atlas.samsung.com), email (imap.hostinger.com),
+  Gmail/Google (inbox.google.com, taskassist-pa, appsgenaiserver-pa, peoplestack-pa).

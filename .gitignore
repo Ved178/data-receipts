@@ -5,4 +5,5 @@ __pycache__/
 *.db-shm
 .DS_Store
 .venv/
-ml/models/
+ml/models/*
+!ml/models/model_ml-v1.*

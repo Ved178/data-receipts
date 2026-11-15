@@ -1,0 +1,28 @@
+run9 — Chicken Simulator. Shield OFF, test phone 10.42.0.33 (Android).
+Times UTC (board clock = Chicago + 6 h). File: run9_chicken_simulator.log (01:58:40 - 02:02:06)
+Copied from the live window, so the first seconds of the launch may be missing (file starts at
+app-measurement.com 01:58:40, which is right at launch).
+
+First party (game's own servers): matryoshka-duels-prod.mg-techdev.app, prod-analytics.matryoshka.com
+(CNAME -> event-receiver-prod...elb.amazonaws.com), portal.braincloudservers.com (brainCloud game backend),
+api.helpshift.com (in-game support).
+
+Third parties seen: AppLovin (MAX mediation), Unity (LevelPlay + Unity Ads), Vungle, InMobi,
+Mintegral (rayjump.com, mtgglobals.com, mintegral.net), BidMachine, Digital Turbine/Fyber,
+TikTok Pangle, Kwai (kwcdn.com), Google Ads (doubleclick, googlesyndication, googletagservices),
+AppsFlyer (app id prefix c572lh: register, conversions, inapps, gcdsdk, pia, cdn-settings),
+Firebase Analytics (app-measurement.com, firebaselogging), Microsoft App Center (in.appcenter.ms).
+Ad creative from a backup host: ad-host-backup-america.oss-us-west-1.aliyuncs.com (Alibaba Cloud).
+
+IP geolocation: pro.ip-api.com at launch (01:58:41) - the game looks up the phone's location by IP.
+
+CLOAKING CASES (good for the model):
+- api.maxesads.com  -> CNAME https-api2.bytegle.tech
+- rep.maxesads.com  -> CNAME https-api.bytegle.tech
+- cfg.sonicsads.com -> CNAME https-api.bytegle.tech
+  Two differently named ad domains resolve to the same bytegle.tech backend.
+
+Noise to ignore (other apps): Instagram/Facebook fallback lookups 01:58:44 (may be Instagram in
+background), Outlook/Microsoft (outlook.office365.com, config.edge.skype.com,
+mobile.pipe.aria.microsoft.com) 01:59:11-01:59:26, Snapchat 02:01:26,
+www.google.com every ~30 s = Android connectivity check.
