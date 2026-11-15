@@ -107,7 +107,7 @@ function flagCard(f) {
     ? `<span class="tag blocked">Blocked</span><button class="small" data-flag="${d}" data-status="suspected">Unblock</button>`
     : `<button class="small" data-flag="${d}" data-status="auto_blocked">Block</button>
        <button class="small" data-flag="${d}" data-status="dismissed" title="Not a tracker: hide it and stop flagging it">Dismiss</button>`;
-  return `<div class="flag ${esc(f.status)}${f.score < HIGH_CONFIDENCE ? " possible" : ""}">
+  return `<div class="flag ${esc(f.status)}${f.score < HIGH_CONFIDENCE && f.model_version !== "rules-v1" ? " possible" : ""}">
       <div class="flag-top"><span class="flag-domain">${d}</span><span class="flag-score">${pct}%</span></div>
       <div class="bar"><i style="width:${pct}%"></i></div>
       <ul class="reasons">${(f.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
@@ -116,19 +116,13 @@ function flagCard(f) {
 }
 
 /** Only flags caught in the SELECTED session: a flagged domain this session contacted.
- * Two tiers by score: High confidence first, then Possible. */
+ * The model's "Possible" tier (below 0.95) is filtered out by the server, so this is one list. */
 function renderFlags() {
   if (caughtHere === null) return;
   const mine = flags.filter(f => caughtHere.has(f.domain) && f.status !== "dismissed")
     .sort((x, y) => y.score - x.score);
   if (!mine.length) { render($("#flags"), `<div class="empty">Nothing caught in this session yet.</div>`); return; }
-  const high = mine.filter(f => f.score >= HIGH_CONFIDENCE), maybe = mine.filter(f => f.score < HIGH_CONFIDENCE);
-  const tier = (title, hint, list) => list.length
-    ? `<div class="tier-head"><h3>${title} <span class="tier-n">${list.length}</span></h3><span class="hint">${hint}</span></div>
-       <div class="flags">${list.map(flagCard).join("")}</div>` : "";
-  render($("#flags"),
-    tier("High confidence", "Score 95% or more. Usually a real tracker.", high) +
-    tier("Possible", "Score 80 to 95%. The box thinks these might be trackers. Check before blocking.", maybe));
+  render($("#flags"), `<div class="flags">${mine.map(flagCard).join("")}</div>`);
 }
 
 /** Apps on the left, tracking companies on the right, one curve per (app, company). */

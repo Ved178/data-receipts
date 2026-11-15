@@ -75,6 +75,10 @@ def set_setting(key, value):
 def flags_map(conn):
     out = {}
     for r in conn.execute("SELECT * FROM ml_flags"):
+        # The ML model's "Possible" tier (score below 0.95) is hidden everywhere; the rules
+        # detector's flags and anything a person blocked always show.
+        if r["model_version"] != "rules-v1" and r["score"] < 0.95 and r["status"] != "auto_blocked":
+            continue
         try:
             reasons = json.loads(r["reasons"])
         except (TypeError, ValueError):
