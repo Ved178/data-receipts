@@ -29,7 +29,7 @@ from ml.lists import norm as lists_norm
 
 NAN = float("nan")
 
-FEATURES = [
+BASE_FEATURES = [
     "n_apps",             # distinct apps (by session app_name) it appeared in
     "cname_depth",        # max CNAME hops seen
     "cname_to_tracker",   # 0/1 chain passes through a known tracker (via L)
@@ -44,6 +44,28 @@ FEATURES = [
     "ip_generic_infra",   # 0/1 an answer IP is in a generic CDN/cloud network (NaN: no IPs/ASN db)
     "own_app_domain",     # 0/1 belongs to the company/name of an app it was seen in (content)
 ]
+FLOW_SHAPE = [
+    "flow_mean_up",       # log1p mean bytes up per connection (beacons are tiny)
+    "flow_mean_dur",      # mean connection duration, seconds (beacons are short)
+    "flows_per_lookup",   # connections opened per lookup
+    "flow_pkt_size",      # mean bytes per packet
+    "flow_port443",       # share of connections on port 443
+]
+NAME_SHAPE = [
+    "name_n_labels", "name_len", "name_digit_ratio", "name_first_label_len", "name_hex_label",
+]
+LAUNCH_ALT = ["launch_not_own"]  # launch_burst and not the app's own domain (opt-in, for ablation)
+TIMING = [
+    "first_contact_delay",  # log1p seconds from session start to first contact
+    "burst_size",           # other lookups within 2 s of its first lookup
+    "lookups_per_min",      # lookups per minute of session time
+    "idle_refire",          # 0/1 contacted again after >30 s of silence
+]
+FEATURE_GROUPS = {"flow_shape": FLOW_SHAPE, "name_shape": NAME_SHAPE, "timing": TIMING}
+# Deployed list = base + timing. tools/ablate.py showed timing raised recall (0.53 -> 0.65 at 0.8)
+# at equal precision; flow_shape and name_shape lowered precision on our small data, so they stay opt-in.
+FEATURES = BASE_FEATURES + TIMING
+ALL_COLUMNS = BASE_FEATURES + FLOW_SHAPE + NAME_SHAPE + TIMING
 EXTRA_COLUMNS = ["n_lookups"]  # kept for reports, not fed to the model
 
 NAME_TOKENS = {"ad", "ads", "adserver", "adx", "adsystem", "track", "tracking", "tracker", "telemetry",
@@ -78,6 +100,17 @@ def _infra_ip(ips):
         if any(o in org for o in INFRA_ORGS):
             return 1
     return 0
+
+
+def _name_shape(dom):
+    labels = (dom or "").split(".")
+    chars = re.sub(r"[^a-z0-9]", "", dom or "")
+    digits = sum(c.isdigit() for c in chars)
+    hexlab = any(len(l) >= 8 and re.fullmatch(r"[0-9a-f-]+", l) and any(c.isdigit() for c in l)
+                 for l in labels)
+    return {"name_n_labels": len(labels), "name_len": len(dom or ""),
+            "name_digit_ratio": digits / len(chars) if chars else 0.0,
+            "name_first_label_len": len(labels[0]), "name_hex_label": int(hexlab)}
 
 
 def _name_tokens(name):
@@ -133,6 +166,12 @@ def build(conn, L, since_ts=None):
         if name:
             by[name].append(r)
 
+    all_ts = sorted(r[0] for r in rows)
+    span, ends = {}, {sid: end for sid, end in conn.execute("SELECT session_id, end_ts FROM sessions")}
+    for r in rows:
+        if r[2] is not None:
+            a = span.setdefault(r[2], [r[0], r[0]])
+            a[1] = max(a[1], r[0])
     # co-occurrence flag per lookup and per-session baseline over non-tracker lookups
     cof = {}
     base_n, base_c = defaultdict(int), defaultdict(int)
@@ -190,6 +229,11 @@ def build(conn, L, since_ts=None):
             bl.append(base_c[sid] / base_n[sid] if base_n.get(sid) else 0.0)
         ts_list = [r[0] for r in rs]
         gaps = [b - a for a, b in zip(ts_list, ts_list[1:]) if b - a > 0]
+        delays = [r[0] - sess[r[2]][1] for r in rs if r[2] in sess and sess[r[2]][1] is not None]
+        i0 = bisect.bisect_left(all_ts, ts_list[0] - CO_WINDOW)
+        j0 = bisect.bisect_right(all_ts, ts_list[0] + CO_WINDOW)
+        mins = sum(max(0.5, ((ends.get(x) or span[x][1]) - sess[x][1]) / 60)
+                   for x in {r[2] for r in rs if r[2] in sess and r[2] in span})
         out[dom] = {
             "n_apps": len(sids),
             "cname_depth": depth if chain_known else NAN,
@@ -199,7 +243,15 @@ def build(conn, L, since_ts=None):
             "co_occur_lift": co / len(rs) - (sum(bl) / len(bl) if bl else 0.0), "launch_burst": launch,
             "periodicity": _cv(gaps) if len(gaps) >= 2 else NAN,
             "flow_bytes_up_ratio": NAN, "flow_interval_cv": NAN,
+            "launch_not_own": int(bool(launch) and not own_app),
             "name_ad_tokens": _name_tokens(dom), "ip_generic_infra": infra, "own_app_domain": own_app,
+            "first_contact_delay": math.log1p(max(0.0, min(delays))) if delays else NAN,
+            "burst_size": j0 - i0 - 1,
+            "lookups_per_min": len(rs) / mins if mins > 0 else NAN,
+            "idle_refire": int(any(g > 30 for g in gaps)),
+            "flow_mean_up": NAN, "flow_mean_dur": NAN, "flows_per_lookup": NAN,
+            "flow_pkt_size": NAN, "flow_port443": NAN,
+            **_name_shape(dom),
             "n_lookups": len(rs),
         }
     _add_flows(conn, out, ip_dom, since_ts)
@@ -208,27 +260,36 @@ def build(conn, L, since_ts=None):
 
 def _add_flows(conn, out, ip_dom, since_ts):
     try:
-        q = "SELECT ts, device, dst_ip, bytes_up, bytes_down FROM raw_flows"
+        q = ("SELECT ts, device, dst_ip, bytes_up, bytes_down, dst_port, pkts_up, pkts_down, "
+             "duration_s FROM raw_flows")
         rows = conn.execute(q + (" WHERE ts >= ?" if since_ts is not None else ""),
                             (since_ts,) if since_ts is not None else ()).fetchall()
     except Exception:  # noqa: BLE001 - table may not exist yet
         return
-    agg = defaultdict(lambda: [0, 0, []])
-    for ts, dev, ip, up, down in rows:
-        for dom in ip_dom.get((dev, ip), ()):
-            a = agg[dom]
-            a[0] += up or 0
-            a[1] += down or 0
-            a[2].append(ts)
-    for dom, (up, down, tss) in agg.items():
+    agg = defaultdict(list)
+    for row in rows:
+        for dom in ip_dom.get((row[1], row[2]), ()):
+            agg[dom].append(row)
+    for dom, fl in agg.items():
         if dom not in out:
             continue
+        up = sum(f[3] or 0 for f in fl)
+        down = sum(f[4] or 0 for f in fl)
         if up + down > 0:
             out[dom]["flow_bytes_up_ratio"] = up / (up + down)
-        tss.sort()
+        tss = sorted(f[0] for f in fl)
         gaps = [b - a for a, b in zip(tss, tss[1:]) if b - a > 0]
         if len(gaps) >= 2:
             out[dom]["flow_interval_cv"] = _cv(gaps)
+        out[dom]["flow_mean_up"] = math.log1p(up / len(fl))
+        durs = [f[8] for f in fl if f[8] is not None]
+        if durs:
+            out[dom]["flow_mean_dur"] = statistics.fmean(durs)
+        out[dom]["flows_per_lookup"] = len(fl) / max(1, out[dom]["n_lookups"])
+        pk = sum((f[6] or 0) + (f[7] or 0) for f in fl)
+        if pk > 0:
+            out[dom]["flow_pkt_size"] = (up + down) / pk
+        out[dom]["flow_port443"] = sum(f[5] == 443 for f in fl) / len(fl)
 
 
 def matrix(F, domains):

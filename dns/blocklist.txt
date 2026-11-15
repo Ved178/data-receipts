@@ -1,0 +1,55 @@
+# Known trackers for Shield when ml/lists.py is not available. One domain per line.
+# Parents match subdomains: vungle.com also blocks ads.vungle.com.
+# From tools/receipt_test.py EXTRA + domains seen in the Block Blast test.
+adjust.com
+app-measurement.com
+applovin.com
+applvn.com
+appsflyer.com
+bidmachine.io
+branch.io
+chartboost.com
+crashlytics.com
+doubleclick.net
+firebaselogging-pa.googleapis.com
+firebaselogging.googleapis.com
+fyber.com
+googleadservices.com
+googlesyndication.com
+googletagservices.com
+helpshift.com
+inmobi.com
+inner-active.mobi
+ironsrc.mobi
+kwcdn.com
+moloco.com
+mtgglobals.com
+pangle.io
+pangleglobal.com
+superawesome.tv
+supersonicads.com
+unity3d.com
+unityads.unity3d.com
+vungle.com
+adsmoloco.com
+liftoff-creatives.io
+doubleverify.com
+dv.tech
+amazon-adsystem.com
+app-analytics-services.com
+safedk.com
+appsflyersdk.com
+# Found live on Block Blast (Nov 14): ad networks missing from every list
+tiktokpangle.us                # Pangle (TikTok/ByteDance ads), US ad requests
+tiktokpangle-cdn-us.com        # Pangle ad videos
+moloco.rtb.afafb.com           # Moloco ads hidden under Block Blast's own domain
+global.moloco.map.fastly.net   # Moloco ads on the Fastly CDN
+# From Pranshu's DigIn dnsmasq blocklist (run1 notes); rest to merge when his digin.conf is pushed
+adsrvr.org                     # The Trade Desk
+2mdn.net                       # Google ad videos
+# Found live on board #2 (Nov 14, Shield ON round 2): Pangle names missing from every list
+tiktokpangle-b.us              # Pangle US API (api16-access-ttp...)
+pangle-shared-api.bytewlb.akadns.net   # Pangle API behind ByteDance's Akamai name
+# Facebook's ad network only (these beat the facebook.com allowlist entry)
+an.facebook.com                # Meta Audience Network (in-app ads)
+pixel.facebook.com             # Meta Pixel

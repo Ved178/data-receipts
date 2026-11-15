@@ -83,3 +83,4 @@ cloudflare-dns.com
 dns.google
 materialdesignicons.com
 createjs.com
+www-temu-com.trafficmanager.net

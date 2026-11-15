@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Receipt</title>
+<style>
+  :root{
+    --ink:#0e0f12; --panel:#17191f; --line:#2a2d36; --text:#eceae4; --mute:#8b8f9a;
+    --paper:#f6f2e8; --paperink:#1b1b1b; --red:#ff4d3d; --green:#33d17a; --amber:#ffb020;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--text);font-family:var(--sans)}
+  header{display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center;
+         padding:18px 28px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--ink);z-index:5}
+  .brand{font-family:var(--mono);font-weight:800;letter-spacing:.18em;font-size:20px}
+  .brand small{display:block;color:var(--mute);letter-spacing:.06em;font-weight:500;font-size:11px;margin-top:2px}
+  .counter{display:flex;gap:28px;justify-content:center}
+  .stat{text-align:center}
+  .stat b{display:block;font-family:var(--mono);font-size:40px;line-height:1;color:var(--red);font-variant-numeric:tabular-nums}
+  .stat.green b{color:var(--green)} .stat.mute b{color:var(--text)}
+  .stat span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+  input,select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px}
+  button{font:inherit;font-size:14px;font-weight:700;border-radius:10px;border:1px solid var(--line);
+         background:var(--panel);color:var(--text);padding:10px 14px;cursor:pointer}
+  button:hover{border-color:var(--mute)}
+  #shield{min-width:150px;letter-spacing:.08em}
+  #shield.on{background:var(--green);color:#06210f;border-color:var(--green)}
+  #shield.off{background:transparent;color:var(--red);border-color:var(--red)}
+  main{display:grid;grid-template-columns:minmax(360px,440px) 1fr;gap:24px;padding:24px 28px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+  h2{margin:0 0 12px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:700}
+  /* the receipt */
+  .receipt{background:var(--paper);color:var(--paperink);font-family:var(--mono);font-size:13px;
+           padding:22px 22px 30px;position:relative;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  .receipt:before,.receipt:after{content:"";position:absolute;left:0;right:0;height:10px;
+     background:linear-gradient(-45deg,transparent 7px,var(--paper) 0) 0 0/14px 14px,
+                linear-gradient(45deg,transparent 7px,var(--paper) 0) 0 0/14px 14px}
+  .receipt:before{top:-10px;transform:rotate(180deg)} .receipt:after{bottom:-10px}
+  .r-center{text-align:center} .r-title{font-weight:800;font-size:18px;letter-spacing:.2em}
+  .r-rule{border-top:1px dashed #555;margin:10px 0}
+  .r-row{display:flex;gap:8px} .r-row .dots{flex:1;border-bottom:1px dotted #999;transform:translateY(-4px)}
+  .r-cat{margin-top:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+  .r-note{color:#555;font-size:11px;margin:2px 0 6px}
+  .r-blocked{color:#0a7d3c;font-weight:700}
+  .r-sus{color:#b3261e;font-weight:800}
+  .r-total{font-weight:800;font-size:15px}
+  .r-small{font-size:11px;color:#555}
+  .right{display:grid;gap:24px;align-content:start}
+  .two{display:grid;grid-template-columns:1.2fr 1fr;gap:24px}
+  .flag{border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+  .flag.auto_blocked{border-left-color:var(--green)} .flag.dismissed{opacity:.45;border-left-color:var(--mute)}
+  .flag .d{font-family:var(--mono);font-weight:700;word-break:break-all}
+  .bar{height:6px;background:var(--line);border-radius:3px;margin:8px 0;overflow:hidden}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--red))}
+  .why{color:var(--mute);font-size:13px}
+  .flag .acts{display:flex;gap:8px;margin-top:8px} .flag button{padding:6px 10px;font-size:12px}
+  .feed{font-family:var(--mono);font-size:12.5px;max-height:330px;overflow:hidden}
+  .feed div{padding:4px 0;border-bottom:1px solid #1f2229;display:flex;gap:10px}
+  .feed .t{color:#5d616b} .feed .trk{color:var(--red);font-weight:700} .feed .blk{color:var(--green);font-weight:700} .feed .norm{color:var(--mute)}
+  .feed-key{font-size:11px;color:var(--mute);margin:-6px 0 8px} .feed-key b{font-weight:700}
+  .empty{color:var(--mute);font-size:13px;padding:8px 0}
+  svg text{font-family:var(--sans)}
+  .rank{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:14px}
+  .rank b{font-family:var(--mono);color:var(--red)}
+  @media (max-width:1100px){main{grid-template-columns:1fr}.two{grid-template-columns:1fr}header{grid-template-columns:1fr}}
+  @media print{header,.right,.noprint{display:none!important} body{background:#fff} main{display:block;padding:0}
+    .receipt{box-shadow:none;max-width:80mm}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">DATA&nbsp;RECEIPT<small>Let's dig in · on-device, no cloud</small></div>
+  <div class="counter">
+    <div class="stat"><b id="c-companies">0</b><span>companies contacted</span></div>
+    <div class="stat green"><b id="c-blocked">0</b><span>blocked</span></div>
+    <div class="stat mute" id="s-suspects" hidden><b id="c-suspects">0</b><span>caught by our detector</span></div>
+  </div>
+  <div class="controls">
+    <input id="app" placeholder="App to test (e.g. Block Blast)" list="apps" size="22">
+    <datalist id="apps"><option>Block Blast</option><option>Subway Surfers</option><option>Instagram</option><option>TikTok</option></datalist>
+    <button id="start">Start</button><button id="end">End</button>
+    <select id="session" title="Which session to show"></select>
+    <button id="shield" class="off">SHIELD OFF</button>
+    <a href="/story" style="color:var(--amber);font-weight:700;text-decoration:none;font-size:14px">Shield story →</a>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="receipt" id="receipt"></div>
+    <div class="noprint" style="text-align:center;margin-top:22px"><button onclick="window.print()">Print / save receipt</button></div>
+  </section>
+
+  <section class="right">
+    <div class="two">
+      <div class="panel"><h2>Suspected trackers · not on our blocklists</h2><div id="flags"></div></div>
+      <div class="panel"><h2>Live lookups</h2><div class="feed-key"><b style="color:var(--red)">● tracker</b> · <b style="color:var(--green)">⛔ blocked</b> · <b>normal</b></div><div class="feed" id="feed"></div></div>
+    </div>
+    <div class="panel">
+      <h2>Tracker Web · the same companies inside every app</h2>
+      <div style="display:grid;grid-template-columns:1fr 260px;gap:20px">
+        <div id="web"></div>
+        <div><h2>Who sees you everywhere</h2><div class="rank" id="rank"></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let chosen = "current", lastSessions = "";
+let sessionFlags = null, lastFlags = [];   // flags caught in the SELECTED session (null = not loaded yet)
+// Every list category, in plain words (the receipt shows them in capitals).
+const CAT_LABEL = {"Advertising": "Advertising", "Analytics": "Analytics", "Social": "Social", "Content": "Content",
+  "Email": "Email", "EmailAggressive": "Email (aggressive)", "Cryptomining": "Crypto mining",
+  "FingerprintingGeneral": "Fingerprinting", "FingerprintingInvasive": "Fingerprinting (invasive)",
+  "ConsentManagers": "Consent managers", "Anti-fraud": "Anti-fraud", "Shield blocklist": "Shield blocklist"};
+// Anything new: "SomeNewCategory" -> "Some new category"
+const catLabel = c => CAT_LABEL[c] || String(c).replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase().replace(/^./, x => x.toUpperCase());
+
+async function post(url, body){ await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})}); refresh(); }
+
+$("#start").onclick = () => post("/api/session/start",{app:$("#app").value});
+$("#end").onclick = () => post("/api/session/end");
+$("#app").onchange = () => post("/api/app",{app:$("#app").value});
+$("#shield").onclick = () => post("/api/shield",{state: $("#shield").classList.contains("on") ? "off" : "on"});
+$("#session").onchange = e => { chosen = e.target.value; refresh(); };
+
+function fmtDur(s){ if(s==null) return "-"; s=Math.round(s); return `${Math.floor(s/60)}m ${String(s%60).padStart(2,"0")}s`; }
+function fmtTime(ts){ return new Date(ts*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"}); }
+
+function renderReceipt(st){
+  const s = st.session, t = st.totals;
+  let h = `<div class="r-center r-title">DATA RECEIPT</div>
+    <div class="r-center r-small">DigIn · MadHacks 2026 · Let's dig in</div><div class="r-rule"></div>
+    <div class="r-row"><span>APP</span><span class="dots"></span><b>${esc(s ? s.app_name : "All sessions")}</b></div>
+    <div class="r-row"><span>TIME</span><span class="dots"></span><span>${fmtDur(st.duration_s)}</span></div>
+    <div class="r-row"><span>LOOKUPS</span><span class="dots"></span><span>${t.lookups}</span></div>
+    <div class="r-row"><span>DOMAINS</span><span class="dots"></span><span>${t.domains}</span></div>
+    <div class="r-rule"></div>`;
+  if(!st.receipt.length) h += `<div class="r-center r-small" style="padding:16px 0">Waiting for lookups...<br>Join DigIn and open an app.</div>`;
+  for(const g of st.receipt){
+    const sus = g.category === "Suspected";
+    h += `<div class="r-cat ${sus?"r-sus":""}">${sus?"Caught by our detector":esc(catLabel(g.category))} (${g.companies.length})</div>
+          <div class="r-note">${esc(g.note)}</div>`;
+    for(const c of g.companies){
+      const name = c.company.length > 26 ? c.company.slice(0,25)+"…" : c.company;
+      h += `<div class="r-row"><span>${esc(name)}</span><span class="dots"></span><span>x${c.hits}</span>${c.blocked?` <span class="r-blocked">BLOCKED</span>`:""}</div>`;
+    }
+  }
+  if((st.background||[]).length){
+    h += `<div class="r-cat" style="color:#666">Background (other apps on the phone)</div>
+          <div class="r-note">Not this app. Shown so you know, not counted below.</div>`;
+    for(const b of st.background) h += `<div class="r-row" style="color:#666"><span>${esc(b.label)}</span><span class="dots"></span><span>x${b.hits}</span></div>`;
+  }
+  h += `<div class="r-rule"></div>
+    <div class="r-row r-total"><span>COMPANIES</span><span class="dots"></span><span>${t.companies}</span></div>
+    <div class="r-row r-total r-blocked"><span>BLOCKED</span><span class="dots"></span><span>${t.companies_blocked}</span></div>
+    <div class="r-rule"></div>
+    <div class="r-center r-small">We saw who was contacted, never what was sent.<br>Shield: ${st.shield.toUpperCase()} · thank you for digging in</div>`;
+  $("#receipt").innerHTML = h;
+}
+
+function renderFeed(st){
+  if(!st.recent.length){ $("#feed").innerHTML = `<div class="empty">No lookups yet.</div>`; return; }
+  $("#feed").innerHTML = st.recent.map(r => `<div><span class="t">${fmtTime(r.ts)}</span>
+    <span class="${r.blocked?"blk":(r.tracker?"trk":"norm")}">${r.blocked?"⛔ ":(r.tracker?"● ":"")}${esc(r.qname)}</span></div>`).join("");
+}
+
+function renderSessions(st){
+  const key = JSON.stringify(st.sessions.map(s=>[s.session_id,s.end_ts]));
+  if(key === lastSessions) return; lastSessions = key;
+  const opts = [`<option value="current">Current / latest</option>`, `<option value="all">All recent lookups</option>`]
+    .concat(st.sessions.map(s => `<option value="${s.session_id}">#${s.session_id} ${esc(s.app_name)}${s.end_ts?"":" (live)"}</option>`));
+  $("#session").innerHTML = opts.join(""); $("#session").value = chosen;
+}
+
+async function refresh(){
+  try{
+    const st = await (await fetch(`/api/state?session=${encodeURIComponent(chosen)}`)).json();
+    const sh = $("#shield"); sh.className = st.shield === "on" ? "on" : "off"; sh.textContent = st.shield === "on" ? "SHIELD ON" : "SHIELD OFF";
+    if(document.activeElement !== $("#app") && st.selected_app) $("#app").value = st.selected_app;
+    $("#c-companies").textContent = st.totals.companies;
+    $("#c-blocked").textContent = st.totals.companies_blocked;
+    renderSessions(st); renderReceipt(st); renderFeed(st);
+    const sus = st.receipt.find(g => g.category === "Suspected");
+    sessionFlags = new Set(sus ? sus.companies.map(c => c.company) : []);
+    renderFlags();
+  }catch(e){ console.warn(e); }
+}
+
+async function refreshSlow(){
+  try{
+    lastFlags = await (await fetch("/api/flags")).json();
+    renderFlags();
+
+    const web = await (await fetch("/api/web")).json();
+    drawWeb(web);
+    $("#rank").innerHTML = web.everywhere.length ? web.everywhere.map(([c,n]) => `<span>${esc(c)}</span><b>${n} app${n>1?"s":""}</b>`).join("")
+      : `<span class="empty">Run 2+ app sessions to see this.</span>`;
+  }catch(e){ console.warn(e); }
+}
+
+// Only flags the detector caught in the SELECTED session: a flagged domain this session contacted.
+function renderFlags(){
+    if(sessionFlags === null) return;
+    const flags = lastFlags.filter(f => sessionFlags.has(f.domain) && f.status !== "dismissed");
+    $("#c-suspects").textContent = flags.length; $("#s-suspects").hidden = flags.length === 0;
+    $("#flags").innerHTML = flags.length ? flags.slice(0,8).map(f => `
+      <div class="flag ${esc(f.status)}">
+        <div class="d">${esc(f.domain)}</div>
+        <div class="bar"><i style="width:${Math.round(f.score*100)}%"></i></div>
+        <div class="why">${Math.round(f.score*100)}% · ${esc((f.reasons||[]).join(" + "))}</div>
+        <div class="acts">${f.status==="auto_blocked" ? "<b style='color:var(--green)'>Auto-blocked</b>" :
+          `<button data-d="${esc(f.domain)}" data-s="auto_blocked">Block</button><button data-d="${esc(f.domain)}" data-s="dismissed">Dismiss</button>`}</div>
+      </div>`).join("") : `<div class="empty">Nothing caught in this session yet. The detector flags domains that aren't on our blocklists.</div>`;
+    document.querySelectorAll(".flag button").forEach(b => b.onclick = () => post("/api/flag",{domain:b.dataset.d,status:b.dataset.s}));
+}
+
+function drawWeb(web){
+  const apps = [...new Set(web.edges.map(e=>e.app))];
+  const reach = {}; web.edges.forEach(e => reach[e.company] = (reach[e.company]||0) + 1);
+  const cos = Object.keys(reach).sort((a,b)=>reach[b]-reach[a]).slice(0,14);
+  if(!apps.length){ $("#web").innerHTML = `<div class="empty">No app sessions yet.</div>`; return; }
+  const W = 640, rowA = 360/Math.max(apps.length,1), rowC = 360/Math.max(cos.length,1), H = 380;
+  const ay = i => 20 + rowA*(i+.5), cy = i => 20 + rowC*(i+.5);
+  const max = Math.max(...web.edges.map(e=>e.hits), 1);
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Tracker Web">`;
+  web.edges.forEach(e => { const i = apps.indexOf(e.app), j = cos.indexOf(e.company); if(j<0) return;
+    const sus = e.category === "Suspected";
+    s += `<path d="M150 ${ay(i)} C 320 ${ay(i)}, 320 ${cy(j)}, 470 ${cy(j)}" fill="none"
+      stroke="${sus?"#ffb020":"#ff4d3d"}" stroke-opacity="${.25+.6*e.hits/max}" stroke-width="${1+3*e.hits/max}"/>`; });
+  apps.forEach((a,i) => s += `<text x="140" y="${ay(i)+4}" text-anchor="end" fill="#eceae4" font-size="14" font-weight="700">${esc(a)}</text>`);
+  cos.forEach((c,j) => s += `<circle cx="474" cy="${cy(j)}" r="4" fill="#ff4d3d"/>
+     <text x="484" y="${cy(j)+4}" fill="#eceae4" font-size="12.5">${esc(c.length>22?c.slice(0,21)+"…":c)} · ${reach[c]}</text>`);
+  $("#web").innerHTML = s + `</svg>`;
+}
+
+refresh(); refreshSlow();
+setInterval(refresh, 1500); setInterval(refreshSlow, 4000);
+</script>
+</body>
+</html>

@@ -15,3 +15,12 @@ cdninstagram.com
 spotifycdn.com
 scdn.co
 sc-cdn.net
+gvt1-cn.com
+www-temu-com.trafficmanager.net
+createjs.com
+materialdesignicons.com
+cloudflare-dns.com
+dns.google
+transcend-cdn.com
+transcend-mobile-consent.com
+playfabapi.com
